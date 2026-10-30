@@ -64,7 +64,7 @@ def _mark_contact(conn, item: PreparedEmail) -> None:
 
 def _send_one(conn, settings: Settings, item: PreparedEmail, sender_name: str,
               send: SendFunction, job: SendJob) -> None:
-    outgoing = OutgoingEmail(to=item.to, subject=item.subject, body=item.body,
+    outgoing = OutgoingEmail(to=item.to, subject=item.subject, body=item.body, html=item.html,
                              attachments=item.attachments, in_reply_to=item.in_reply_to)
     try:
         message_id = send(settings, outgoing, sender_name)

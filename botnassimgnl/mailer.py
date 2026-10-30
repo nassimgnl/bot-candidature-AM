@@ -2,16 +2,18 @@
 
 import mimetypes
 import smtplib
-import ssl
 from dataclasses import dataclass, field
 from email.message import EmailMessage
 from email.utils import formataddr, make_msgid
 from pathlib import Path
 
 from botnassimgnl.config import Settings
+from botnassimgnl.tls import secure_context
 
 SMTP_TIMEOUT_SECONDS = 30
 SSL_PORT = 465
+HTML_LAYOUT = ('<html><body><div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;'
+               'line-height:1.5;color:#222">{content}</div></body></html>')
 
 
 class MailerError(RuntimeError):
@@ -23,6 +25,7 @@ class OutgoingEmail:
     to: str
     subject: str
     body: str
+    html: str = ""
     attachments: tuple[Path, ...] = ()
     in_reply_to: str | None = None
     references: tuple[str, ...] = field(default_factory=tuple)
@@ -39,6 +42,8 @@ def build_message(settings: Settings, email: OutgoingEmail, sender_name: str = "
         message["In-Reply-To"] = email.in_reply_to
         message["References"] = " ".join(email.references or (email.in_reply_to,))
     message.set_content(email.body)
+    if email.html:
+        message.add_alternative(HTML_LAYOUT.format(content=email.html), subtype="html")
     for path in email.attachments:
         mime_type, _ = mimetypes.guess_type(path.name)
         maintype, subtype = (mime_type or "application/octet-stream").split("/", 1)
@@ -49,7 +54,7 @@ def build_message(settings: Settings, email: OutgoingEmail, sender_name: str = "
 def _open_connection(settings: Settings) -> smtplib.SMTP:
     if not settings.smtp_configured:
         raise MailerError("SMTP non configure : renseigne SMTP_USER et SMTP_PASSWORD dans le fichier .env")
-    context = ssl.create_default_context()
+    context = secure_context()
     try:
         if settings.smtp_port == SSL_PORT:
             server = smtplib.SMTP_SSL(settings.smtp_host, settings.smtp_port,

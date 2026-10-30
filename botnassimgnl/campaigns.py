@@ -10,7 +10,8 @@ from botnassimgnl.config import Settings
 from botnassimgnl.repos.emails import first_email
 from botnassimgnl.repos.profile import get_profile
 from botnassimgnl.repos.templates import followup_template
-from botnassimgnl.templating import build_context, render
+from botnassimgnl.repos.variables import list_variables
+from botnassimgnl.templating import build_context, render, render_html
 
 SQLITE_DATETIME = "%Y-%m-%d %H:%M:%S"
 
@@ -26,6 +27,7 @@ class PreparedEmail:
     to: str
     subject: str
     body: str
+    html: str
     kind: str  # "initial" ou "relance"
     attachments: tuple[Path, ...] = ()
     in_reply_to: str | None = None
@@ -44,7 +46,7 @@ def _thread_subject(original_subject: str) -> str:
 def prepare_initial(conn: sqlite3.Connection, contacts: list[dict], subject: str, body: str,
                     attachments: tuple[Path, ...], force: bool) -> Preparation:
     """Premier envoi. Les contacts deja contactes sont ignores, sauf si force=True."""
-    profile = get_profile(conn)
+    profile, custom_variables = get_profile(conn), list_variables(conn)
     emails, skipped = [], []
     for contact in contacts:
         name = f"{contact['prenom']} {contact['nom']}"
@@ -58,13 +60,14 @@ def prepare_initial(conn: sqlite3.Connection, contacts: list[dict], subject: str
         if already_contacted and not force:
             skipped.append(f"{name} : deja contacte")
             continue
-        context = build_context(contact, profile)
+        context = build_context(contact, profile, custom_variables)
         thread = first_email(conn, contact["id"]) if already_contacted else None
         emails.append(PreparedEmail(
             contact_id=contact["id"],
             to=contact["email"],
             subject=render(subject, context),
             body=render(body, context),
+            html=render_html(body, context),
             kind="relance" if thread else "initial",
             attachments=attachments,
             in_reply_to=thread["message_id"] if thread else None,
@@ -102,7 +105,7 @@ def expire_followups(conn: sqlite3.Connection, settings: Settings, now: datetime
 
 def prepare_followups(conn: sqlite3.Connection, contacts: list[dict]) -> Preparation:
     """Relances dans le fil du premier mail, avec le template de l'etape suivante."""
-    profile = get_profile(conn)
+    profile, custom_variables = get_profile(conn), list_variables(conn)
     emails, skipped = [], []
     for contact in contacts:
         name = f"{contact['prenom']} {contact['nom']}"
@@ -114,7 +117,7 @@ def prepare_followups(conn: sqlite3.Connection, contacts: list[dict]) -> Prepara
         if template is None:
             skipped.append(f"{name} : aucun template de relance ({contact['lang'].upper()})")
             continue
-        context = build_context(contact, profile)
+        context = build_context(contact, profile, custom_variables)
         thread = first_email(conn, contact["id"])
         subject = _thread_subject(thread["subject"]) if thread else render(template["subject"], context)
         emails.append(PreparedEmail(
@@ -122,6 +125,7 @@ def prepare_followups(conn: sqlite3.Connection, contacts: list[dict]) -> Prepara
             to=contact["email"],
             subject=subject,
             body=render(template["body"], context),
+            html=render_html(template["body"], context),
             kind="relance",
             in_reply_to=thread["message_id"] if thread else None,
         ))

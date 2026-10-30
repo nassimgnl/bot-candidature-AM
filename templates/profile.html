@@ -10,6 +10,15 @@
   <label><span class="label">Nom <code class="text-xs text-subtle">{Mon_Nom}</code></span><input class="input" name="nom" value="{{ profile.nom }}"></label>
   <label><span class="label">Ecole <code class="text-xs text-subtle">{Mon_Ecole}</code></span><input class="input" name="ecole" value="{{ profile.ecole }}" placeholder="HEC, ESSEC, Dauphine..."></label>
   <label><span class="label">Poste actuel <code class="text-xs text-subtle">{Mon_Poste}</code></span><input class="input" name="poste_actuel" value="{{ profile.poste_actuel }}" placeholder="Etudiant M1 Finance..."></label>
+  <label><span class="label">Telephone <code class="text-xs text-subtle">{Mon_Telephone}</code></span><input class="input" type="tel" name="telephone" value="{{ profile.telephone }}" placeholder="+33 6 12 34 56 78" autocomplete="tel"></label>
+  <label><span class="label">LinkedIn <code class="text-xs text-subtle">{Mon_LinkedIn}</code></span><input class="input" name="linkedin" value="{{ profile.linkedin }}" placeholder="linkedin.com/in/ton-profil" autocomplete="url"></label>
+  <div class="sm:col-span-2 rounded-2xl border border-line p-4">
+    <p class="text-xs uppercase tracking-widest text-subtle">Apercu de ta signature</p>
+    <p class="mt-2 text-sm leading-relaxed text-fg">{{ profile.prenom or "Prenom" }} {{ profile.nom or "Nom" }}<br>
+      {{ profile.telephone or "+33 6 12 34 56 78" }}<br>
+      {% if profile.linkedin %}<a class="text-info underline underline-offset-2" href="{{ profile.linkedin }}" target="_blank" rel="noopener">LinkedIn</a>{% else %}<span class="text-info underline underline-offset-2">LinkedIn</span>{% endif %}</p>
+    <p class="mt-2 text-xs text-subtle">Dans tes templates, ecris <code>{Mon_Prenom} {Mon_Nom}</code>, <code>{Mon_Telephone}</code> et <code>{Mon_LinkedIn}</code> sur trois lignes : le LinkedIn devient un lien cliquable.</p>
+  </div>
   <div class="sm:col-span-2">
     <span class="label">CV (joint aux emails)</span>
     {% if profile.cv_filename %}

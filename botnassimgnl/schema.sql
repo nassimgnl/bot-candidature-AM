@@ -65,7 +65,16 @@ CREATE TABLE IF NOT EXISTS profile (
     nom           TEXT NOT NULL DEFAULT '',
     ecole         TEXT NOT NULL DEFAULT '',
     poste_actuel  TEXT NOT NULL DEFAULT '',
-    cv_filename   TEXT NOT NULL DEFAULT ''
+    cv_filename   TEXT NOT NULL DEFAULT '',
+    telephone     TEXT NOT NULL DEFAULT '',
+    linkedin      TEXT NOT NULL DEFAULT ''
+);
+
+CREATE TABLE IF NOT EXISTS custom_variables (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    name        TEXT NOT NULL UNIQUE COLLATE NOCASE,
+    value       TEXT NOT NULL DEFAULT '',
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE TABLE IF NOT EXISTS meta (

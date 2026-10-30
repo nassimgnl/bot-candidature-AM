@@ -70,7 +70,9 @@
     <label class="block"><span class="label">Sujet</span><input class="input" name="subject" id="subject" placeholder="Objet de l'email..." required></label>
     <label class="block"><span class="label">Message</span><textarea class="textarea font-mono text-[13px] leading-relaxed" name="body" id="body" rows="14" placeholder="Corps de l'email..." required></textarea></label>
     <p class="text-xs text-subtle">Variables :
-      {% for v in variables %}<button type="button" class="mx-0.5 rounded bg-raised px-1.5 py-0.5 font-mono text-fg2 hover:bg-line" data-var="{{ v }}">{{ v }}</button>{% endfor %}
+      {% for v in variables %}<button type="button" class="var-chip" data-var="{{ v }}">{{ v }}</button>{% endfor %}
+      <span id="custom-vars"></span>
+      <button type="button" class="var-chip var-add" id="var-add" aria-haspopup="dialog" title="Creer ou modifier mes variables">{{ icon("plus", "h-3.5 w-3.5") }}<span class="sr-only">Creer une variable</span></button>
     </p>
 
     <fieldset class="space-y-3 rounded-2xl border border-line p-4">
@@ -107,7 +109,7 @@
       <div id="preview" class="hidden">
         <p class="text-sm text-muted">A : <span class="text-fg" id="pv-to"></span></p>
         <p class="mt-1 text-sm text-muted">Objet : <span class="text-fg" id="pv-subject"></span></p>
-        <pre class="mt-4 max-h-[28rem] overflow-y-auto whitespace-pre-wrap rounded-2xl bg-raised p-4 font-sans text-sm leading-relaxed text-fg2" id="pv-body"></pre>
+        <div class="email-preview mt-4 max-h-[28rem] overflow-y-auto break-words rounded-2xl bg-raised p-4 text-sm leading-relaxed text-fg2" id="pv-body"></div>
       </div>
     </section>
 
@@ -131,6 +133,36 @@
   {{ csrf() }}
   <input name="name"><input name="lang"><input name="category"><input name="followup_step"><input name="subject"><textarea name="body"></textarea>
 </form>
+<dialog class="var-dialog" id="var-dialog" aria-labelledby="var-dialog-title"
+        data-items='{{ custom_variables|tojson|forceescape }}'
+        data-create="{{ url_for('compose.variable_create') }}" data-base="{{ url_for('compose.index') }}variables/">
+  <div class="flex items-start justify-between gap-4">
+    <div>
+      <h2 id="var-dialog-title" class="font-display text-lg font-bold text-fg">Mes variables</h2>
+      <p class="mt-1 text-sm text-muted">Cree tes propres variables. Un lien (https://...) devient cliquable dans le mail.</p>
+    </div>
+    <button type="button" class="btn btn-ghost btn-sm" data-close aria-label="Fermer">{{ icon("x", "h-4 w-4") }}</button>
+  </div>
+  <ul class="mt-5 space-y-2" id="var-list"></ul>
+  <form class="mt-5 grid gap-2 border-t border-line pt-5 sm:grid-cols-[minmax(0,11rem)_minmax(0,1fr)_auto]" id="var-new">
+    <input class="input py-2" name="name" placeholder="Nom (ex : Portfolio)" maxlength="30" required aria-label="Nom de la variable">
+    <input class="input py-2" name="value" placeholder="Valeur (texte ou https://...)" maxlength="500" aria-label="Valeur">
+    <button class="btn btn-primary btn-sm">{{ icon("plus", "h-4 w-4") }}Creer</button>
+  </form>
+  <p class="mt-3 hidden text-sm text-danger" id="var-error" role="alert"></p>
+  <p class="mt-4 text-xs text-subtle">{Mon_Telephone} et {Mon_LinkedIn} se modifient dans <a class="link" href="{{ url_for('profile.index') }}">Profil</a>.</p>
+</dialog>
+<template id="var-row-tpl">
+  <li class="grid items-center gap-2 sm:grid-cols-[minmax(0,11rem)_minmax(0,1fr)_auto]">
+    <code class="truncate font-mono text-sm text-fg" data-name></code>
+    <input class="input py-2" data-value maxlength="500" aria-label="Valeur">
+    <div class="flex gap-1">
+      <button type="button" class="btn btn-sm" data-save title="Enregistrer">{{ icon("check", "h-4 w-4") }}<span class="sr-only">Enregistrer</span></button>
+      <button type="button" class="btn btn-sm btn-danger" data-delete title="Supprimer">{{ icon("trash", "h-4 w-4") }}<span class="sr-only">Supprimer</span></button>
+    </div>
+  </li>
+</template>
 <div class="hidden" id="tpl-urls" data-create="{{ url_for('compose.template_create') }}" data-base="{{ url_for('compose.index') }}templates/"></div>
 {% endblock %}
-{% block scripts %}<script src="{{ url_for('static', filename='compose.js') }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='compose.js') }}"></script>
+<script src="{{ url_for('static', filename='variables.js') }}"></script>{% endblock %}

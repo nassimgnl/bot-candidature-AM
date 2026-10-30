@@ -7,11 +7,12 @@ from botnassimgnl.db import get_db
 from botnassimgnl.mailer import MailerError, OutgoingEmail, send_email
 from botnassimgnl.repos import templates as template_repo
 from botnassimgnl.repos.contacts import get_contact, get_contacts, list_contacts
+from botnassimgnl.repos import variables as variables_repo
 from botnassimgnl.repos.profile import get_profile
 from botnassimgnl.routes.helpers import app_settings, form_ids
 from botnassimgnl.routes.profile import save_upload
 from botnassimgnl.sender import active_job, get_job, start_job
-from botnassimgnl.templating import VARIABLES_HELP, build_context, render
+from botnassimgnl.templating import VARIABLES_HELP, build_context, render, render_html
 
 bp = Blueprint("compose", __name__, url_prefix="/compose")
 
@@ -22,6 +23,10 @@ SAMPLE_CONTACT = {"civilite": "Monsieur", "prenom": "Jean", "nom": "Dupont",
 
 def _sender_name(profile: dict) -> str:
     return app_settings().sender_name or f"{profile['prenom']} {profile['nom']}".strip()
+
+
+def _context(conn, contact: dict | None, profile: dict) -> dict:
+    return build_context(contact or SAMPLE_CONTACT, profile, variables_repo.list_variables(conn))
 
 
 def _attachments(profile: dict) -> tuple[Path, ...]:
@@ -48,6 +53,7 @@ def index():
         preselected=preselected,
         profile=get_profile(conn),
         variables=VARIABLES_HELP,
+        custom_variables=variables_repo.list_variables(conn),
         job=get_job(request.args.get("job", "")) or active_job(),
     )
 
@@ -57,11 +63,12 @@ def preview():
     payload = request.get_json(silent=True) or {}
     conn = get_db()
     contact = get_contact(conn, int(payload["contact_id"])) if str(payload.get("contact_id", "")).isdigit() else None
-    context = build_context(contact or SAMPLE_CONTACT, get_profile(conn))
+    context = _context(conn, contact, get_profile(conn))
     return jsonify({
         "to": contact["email"] if contact else "(exemple)",
         "subject": render(payload.get("subject", ""), context),
         "body": render(payload.get("body", ""), context),
+        "html": render_html(payload.get("body", ""), context),
     })
 
 
@@ -105,12 +112,13 @@ def send_test():
     profile = get_profile(conn)
     ids = form_ids()
     contact = get_contact(conn, ids[0]) if ids else None
-    context = build_context(contact or SAMPLE_CONTACT, profile)
+    context = _context(conn, contact, profile)
+    body = request.form.get("body", "")
     try:
         attachments = _attachments(profile)
         send_email(settings, OutgoingEmail(to=settings.smtp_user,
                                            subject="[TEST] " + render(request.form.get("subject", ""), context),
-                                           body=render(request.form.get("body", ""), context),
+                                           body=render(body, context), html=render_html(body, context),
                                            attachments=attachments), _sender_name(profile))
     except (MailerError, ValueError) as exc:
         flash(f"Mail test non envoye : {exc}", "error")
@@ -160,3 +168,34 @@ def template_delete(template_id: int):
     template_repo.delete_template(get_db(), template_id)
     flash("Template supprime.", "success")
     return redirect(url_for("compose.index"))
+
+
+def _variables_response(error: str | None = None):
+    payload = {"variables": variables_repo.list_variables(get_db())}
+    return (jsonify({**payload, "error": error}), 400) if error else jsonify(payload)
+
+
+@bp.post("/variables")
+def variable_create():
+    payload = request.get_json(silent=True) or {}
+    try:
+        variables_repo.create_variable(get_db(), str(payload.get("name", "")), str(payload.get("value", "")))
+    except variables_repo.VariableError as exc:
+        return _variables_response(str(exc))
+    return _variables_response()
+
+
+@bp.post("/variables/<int:variable_id>")
+def variable_update(variable_id: int):
+    payload = request.get_json(silent=True) or {}
+    try:
+        variables_repo.update_variable(get_db(), variable_id, str(payload.get("value", "")))
+    except variables_repo.VariableError as exc:
+        return _variables_response(str(exc))
+    return _variables_response()
+
+
+@bp.post("/variables/<int:variable_id>/delete")
+def variable_delete(variable_id: int):
+    variables_repo.delete_variable(get_db(), variable_id)
+    return _variables_response()

@@ -11,6 +11,7 @@ from email.utils import parseaddr
 from botnassimgnl import statuses
 from botnassimgnl.config import Settings
 from botnassimgnl.repos.emails import earliest_sent_date, message_ids_by_contact
+from botnassimgnl.tls import secure_context
 
 IMAP_TIMEOUT_SECONDS = 30
 MAX_MESSAGES_SCANNED = 500
@@ -56,7 +57,7 @@ def classify(messages: list[InboxMessage], contacts_by_email: dict[str, int],
 
 def _fetch_messages(settings: Settings, since: datetime) -> list[InboxMessage]:
     try:
-        client = imaplib.IMAP4_SSL(settings.imap_host, timeout=IMAP_TIMEOUT_SECONDS)
+        client = imaplib.IMAP4_SSL(settings.imap_host, ssl_context=secure_context(), timeout=IMAP_TIMEOUT_SECONDS)
         client.login(settings.smtp_user, settings.smtp_password)
     except (imaplib.IMAP4.error, OSError) as exc:
         raise InboxError(f"Connexion IMAP impossible ({settings.imap_host}) : {exc}") from exc

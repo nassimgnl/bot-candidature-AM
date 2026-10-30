@@ -6,6 +6,8 @@ from pathlib import Path
 from flask import current_app, g
 
 SCHEMA_PATH = Path(__file__).with_name("schema.sql")
+# Colonnes ajoutees apres la premiere version : ajoutees aux bases existantes.
+ADDED_PROFILE_COLUMNS = ("telephone", "linkedin")
 
 
 def connect(database_path: Path | str) -> sqlite3.Connection:
@@ -17,8 +19,16 @@ def connect(database_path: Path | str) -> sqlite3.Connection:
     return conn
 
 
+def _add_missing_profile_columns(conn: sqlite3.Connection) -> None:
+    existing = {row[1] for row in conn.execute("PRAGMA table_info(profile)")}
+    for column in ADDED_PROFILE_COLUMNS:
+        if column not in existing:
+            conn.execute(f"ALTER TABLE profile ADD COLUMN {column} TEXT NOT NULL DEFAULT ''")
+
+
 def init_schema(conn: sqlite3.Connection) -> None:
     conn.executescript(SCHEMA_PATH.read_text(encoding="utf-8"))
+    _add_missing_profile_columns(conn)
     conn.execute("INSERT OR IGNORE INTO profile (id) VALUES (1)")
     conn.commit()
 

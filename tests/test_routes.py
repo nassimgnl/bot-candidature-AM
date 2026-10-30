@@ -55,7 +55,8 @@ def test_compose_preview_renders_for_contact(client, csrf, conn):
     contact_id = contacts_repo.create_contact(conn, {"prenom": "Jean", "nom": "Dupont", "institution": "UBS"})
     data = client.post("/compose/preview", json={"contact_id": contact_id, "subject": "Hello {Institution}",
                                                  "body": "{Civilite} {Nom}"}, headers={"X-CSRF-Token": csrf}).get_json()
-    assert data == {"to": "jean.dupont@ubs.com", "subject": "Hello UBS", "body": "Monsieur Dupont"}
+    assert data == {"to": "jean.dupont@ubs.com", "subject": "Hello UBS", "body": "Monsieur Dupont",
+                    "html": "Monsieur Dupont"}
 
 
 def test_bulk_delete(client, csrf, conn):

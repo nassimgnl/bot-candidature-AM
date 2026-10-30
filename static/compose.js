@@ -48,7 +48,8 @@
       document.getElementById("preview").classList.remove("hidden");
       document.getElementById("pv-to").textContent = ids.length > 1 ? `${data.to} (+${ids.length - 1} autres)` : data.to;
       document.getElementById("pv-subject").textContent = data.subject;
-      document.getElementById("pv-body").textContent = data.body;
+      // HTML deja echappe cote serveur (render_html) : seuls les liens des variables sont des balises.
+      document.getElementById("pv-body").innerHTML = data.html;
     } catch (err) {
       console.error(err);
     }
@@ -60,12 +61,16 @@
   [subject, body].forEach((el) => el.addEventListener("input", refreshPreview));
   form.addEventListener("change", (e) => { if (e.target.name === "ids" || e.target.dataset.selectAll) refreshPreview(); });
 
-  document.querySelectorAll("[data-var]").forEach((b) => b.addEventListener("click", () => {
+  // Delegue : les variables perso sont ajoutees dynamiquement par variables.js.
+  document.addEventListener("click", (e) => {
+    const chip = e.target.closest("[data-var]");
+    if (!chip) return;
     const start = body.selectionStart ?? body.value.length;
-    body.setRangeText(b.dataset.var, start, body.selectionEnd ?? start, "end");
+    body.setRangeText(chip.dataset.var, start, body.selectionEnd ?? start, "end");
     body.focus();
     refreshPreview();
-  }));
+  });
+  document.addEventListener("variables:changed", refreshPreview);
 
   const search = document.getElementById("recipient-search");
   if (search) search.addEventListener("input", () => {

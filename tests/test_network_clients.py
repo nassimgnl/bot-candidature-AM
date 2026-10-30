@@ -71,7 +71,7 @@ def test_missing_credentials(unconfigured_settings):
 class FakeIMAP:
     messages: dict[bytes, tuple[bytes, bytes]] = {}
 
-    def __init__(self, host, timeout=None):
+    def __init__(self, host, ssl_context=None, timeout=None):
         pass
 
     def login(self, user, password):

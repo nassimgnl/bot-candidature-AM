@@ -26,6 +26,19 @@ python app.py
 
 Ouvre **http://localhost:5000** dans ton navigateur. Le site n'est accessible que depuis ton ordinateur.
 
+## Lancer depuis GitHub Codespaces (sans rien installer)
+
+1. Sur la page GitHub du projet : bouton vert **Code** → onglet **Codespaces** → **Create codespace on main**.
+2. Attends 1 à 2 minutes : les dépendances s'installent et le site se lance tout seul (`python app.py`).
+3. Une notification propose **Open in Browser** (sinon : onglet **Ports** → port 5000 → icône 🌐).
+4. Pour relancer le site plus tard : dans le terminal, `python app.py`.
+
+**Identifiants mail dans Codespaces** : le plus sûr est d'utiliser les *secrets Codespaces* (github.com → Settings → Codespaces → Secrets) : crée `SMTP_USER`, `SMTP_PASSWORD`, `SENDER_NAME`, `SECRET_KEY` et autorise-les pour ce dépôt, puis redémarre le codespace. (Tu peux aussi créer un fichier `.env` dans le codespace : il n'est jamais envoyé sur GitHub.)
+
+⚠️ Le site n'a pas de connexion : laisse le port 5000 en visibilité **Private** (réglage par défaut). En « Public », n'importe qui ayant le lien pourrait envoyer des mails depuis ta boîte.
+
+À savoir : un codespace s'arrête après 30 min d'inactivité (un envoi groupé en cours s'interrompt) ; tes contacts sont conservés tant que tu ne supprimes pas le codespace.
+
 ## Le fichier `.env`
 
 | Variable | À mettre | Exemple |

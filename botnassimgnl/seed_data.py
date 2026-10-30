@@ -1,6 +1,6 @@
 """Donnees initiales : formats mail des banques et templates d'email.
 
-Sources : "Format mail.pdf", bot_mail-2.py et les templates d'INSIDER.
+Sources : "Format mail.pdf", bot_mail-2.py et les templates du site d'origine.
 Un format reduit a un domaine ("natixis.com") signifie "{prenom}.{nom}@natixis.com".
 """
 

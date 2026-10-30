@@ -1,12 +1,13 @@
 {% extends "base.html" %}
 {% from "_macros.html" import icon, csrf, page_header with context %}
+{% set page_title = "Formats mail" %}
 {% block content %}
 <div class="flex flex-wrap items-start justify-between gap-4">
   {{ page_header("Formats mail", institutions|length ~ " institution(s) — ajoute une banque qui n'est pas encore en base, ou corrige un format") }}
 </div>
 
 <section class="card mt-8 p-6" aria-labelledby="new-inst">
-  <h2 id="new-inst" class="font-display text-base text-white">Ajouter une institution</h2>
+  <h2 id="new-inst" class="font-display text-base font-bold text-fg">Ajouter une institution</h2>
   <form method="post" action="{{ url_for('formats.create') }}" class="mt-5 grid gap-4 lg:grid-cols-[1fr_1.4fr_auto]" data-format-form>
     {{ csrf() }}
     <label><span class="label">Nom</span><input class="input" name="name" placeholder="Ex : Rothschild & Co" required></label>
@@ -15,19 +16,19 @@
       <div class="space-y-2" data-patterns>
         <input class="input font-mono text-sm" name="patterns" placeholder="{prenom}.{nom}@rothschildandco.com" data-pattern>
       </div>
-      <button type="button" class="mt-2 text-sm text-gold-400 hover:underline" data-add-pattern>+ autre format</button>
+      <button type="button" class="mt-2 text-sm text-brand-text hover:underline" data-add-pattern>+ autre format</button>
     </div>
-    <button class="btn btn-gold self-start lg:mt-7">{{ icon("plus", "h-4 w-4") }}Ajouter</button>
+    <button class="btn btn-primary self-start lg:mt-7">{{ icon("plus", "h-4 w-4") }}Ajouter</button>
   </form>
-  <div class="mt-5 rounded-2xl border border-white/5 p-4 text-sm text-slate-400">
-    <p class="text-white">Comment ecrire un format ?</p>
+  <div class="mt-5 rounded-2xl border border-line p-4 text-sm text-muted">
+    <p class="text-fg">Comment ecrire un format ?</p>
     <ul class="mt-2 grid gap-1 sm:grid-cols-2">
-      <li><code class="text-gold-300">{prenom}.{nom}@banque.com</code> → john.smith@banque.com</li>
-      <li><code class="text-gold-300">{prenom[0]}{nom}@banque.com</code> → jsmith@banque.com</li>
-      <li><code class="text-gold-300">{prenom[0]}.{nom}@banque.com</code> → j.smith@banque.com</li>
-      <li><code class="text-gold-300">{nom}@banque.com</code> → smith@banque.com</li>
-      <li><code class="text-gold-300">{prenom}_{nom}@banque.com</code> → john_smith@banque.com</li>
-      <li><code class="text-gold-300">{nom}{prenom[0]}@banque.com</code> → smithj@banque.com</li>
+      <li><code class="text-brand-text">{prenom}.{nom}@banque.com</code> → john.smith@banque.com</li>
+      <li><code class="text-brand-text">{prenom[0]}{nom}@banque.com</code> → jsmith@banque.com</li>
+      <li><code class="text-brand-text">{prenom[0]}.{nom}@banque.com</code> → j.smith@banque.com</li>
+      <li><code class="text-brand-text">{nom}@banque.com</code> → smith@banque.com</li>
+      <li><code class="text-brand-text">{prenom}_{nom}@banque.com</code> → john_smith@banque.com</li>
+      <li><code class="text-brand-text">{nom}{prenom[0]}@banque.com</code> → smithj@banque.com</li>
     </ul>
     <p class="mt-2">Accents, espaces et apostrophes sont retires automatiquement (Hélène De La Tour → helenedelatour). Le premier format est utilise par defaut.</p>
   </div>
@@ -35,10 +36,10 @@
 
 <section class="mt-6" aria-labelledby="list-title">
   <div class="flex flex-wrap items-center justify-between gap-3">
-    <h2 id="list-title" class="font-display text-base text-white">Institutions en base</h2>
+    <h2 id="list-title" class="font-display text-base font-bold text-fg">Institutions en base</h2>
     <form method="get" class="flex gap-2">
       <input class="input py-2" name="search" value="{{ search }}" placeholder="Rechercher une institution...">
-      <label class="flex items-center gap-2 text-sm text-slate-400">Tester avec
+      <label class="flex items-center gap-2 whitespace-nowrap text-sm text-muted">Tester avec
         <input class="input w-28 py-2" id="test-prenom" value="Jean" aria-label="Prenom de test">
         <input class="input w-28 py-2" id="test-nom" value="Dupont" aria-label="Nom de test">
       </label>
@@ -49,32 +50,32 @@
     <details class="card group p-5">
       <summary class="flex cursor-pointer list-none items-center justify-between gap-3">
         <span>
-          <span class="font-medium text-white">{{ inst.name }}</span>
-          <span class="ml-2 text-xs text-slate-500">{{ inst.formats|length }} format(s) · {{ inst.contact_count }} contact(s)</span>
+          <span class="font-medium text-fg">{{ inst.name }}</span>
+          <span class="ml-2 text-xs text-subtle">{{ inst.formats|length }} format(s) · {{ inst.contact_count }} contact(s)</span>
         </span>
-        <span class="truncate font-mono text-xs text-slate-400" data-live-example="{{ inst.formats[0].pattern if inst.formats else '' }}">{{ inst.formats[0].example if inst.formats else "aucun format" }}</span>
+        <span class="truncate font-mono text-xs text-muted" data-live-example="{{ inst.formats[0].pattern if inst.formats else '' }}">{{ inst.formats[0].example if inst.formats else "aucun format" }}</span>
       </summary>
-      <form method="post" action="{{ url_for('formats.update', institution_id=inst.id, search=search) }}" class="mt-4 space-y-3 border-t border-white/5 pt-4" data-format-form>
+      <form method="post" action="{{ url_for('formats.update', institution_id=inst.id, search=search) }}" class="mt-4 space-y-3 border-t border-line pt-4" data-format-form>
         {{ csrf() }}
         <label><span class="label">Nom</span><input class="input" name="name" value="{{ inst.name }}" required></label>
         <div class="space-y-2" data-patterns>
           {% for f in inst.formats %}
           <div class="flex items-center gap-2">
             <input class="input font-mono text-sm" name="patterns" value="{{ f.pattern }}" data-pattern>
-            <span class="w-48 shrink-0 truncate font-mono text-xs text-slate-500" data-example>{{ f.example }}</span>
+            <span class="w-48 shrink-0 truncate font-mono text-xs text-subtle" data-example>{{ f.example }}</span>
           </div>
           {% endfor %}
         </div>
-        <button type="button" class="text-sm text-gold-400 hover:underline" data-add-pattern>+ autre format</button>
-        <p class="text-xs text-slate-500">Vide un champ pour supprimer ce format.</p>
+        <button type="button" class="text-sm text-brand-text hover:underline" data-add-pattern>+ autre format</button>
+        <p class="text-xs text-subtle">Vide un champ pour supprimer ce format.</p>
         <div class="flex gap-2">
-          <button class="btn btn-gold py-1.5">Sauvegarder</button>
+          <button class="btn btn-primary py-1.5">Sauvegarder</button>
           <button class="btn btn-danger py-1.5" formaction="{{ url_for('formats.delete', institution_id=inst.id) }}" data-confirm="Supprimer {{ inst.name }} et ses formats ?">{{ icon("trash", "h-4 w-4") }}Supprimer</button>
         </div>
       </form>
     </details>
     {% else %}
-    <p class="text-slate-400">Aucune institution trouvee.</p>
+    <p class="text-muted">Aucune institution trouvee.</p>
     {% endfor %}
   </div>
 </section>
@@ -101,7 +102,7 @@
     }
     const result = await example(input.value);
     target.textContent = result.text;
-    target.className = `w-48 shrink-0 truncate font-mono text-xs ${result.ok ? "text-emerald-300" : "text-rose-300"}`;
+    target.className = `w-48 shrink-0 truncate font-mono text-xs ${result.ok ? "text-success" : "text-danger"}`;
   }
 
   document.addEventListener("input", debounce((e) => { if (e.target.matches("[data-pattern]")) updateExample(e.target); }, 300));

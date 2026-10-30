@@ -1,7 +1,7 @@
 import pytest
 
-from insider.email_format import EmailFormatError, build_email, format_example, normalize_name_part, validate_format
-from insider.seed_data import INSTITUTIONS, expand_format
+from botnassimgnl.email_format import EmailFormatError, build_email, format_example, normalize_name_part, validate_format
+from botnassimgnl.seed_data import INSTITUTIONS, expand_format
 
 
 @pytest.mark.parametrize("pattern, expected", [

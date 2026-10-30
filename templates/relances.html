@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "_macros.html" import icon, status_badge, csrf, page_header with context %}
+{% set page_title = "Relances" %}
 {% block content %}
 {{ page_header("Relances", "Contacts sans reponse depuis " ~ settings.followup_delay_days ~ " jours — " ~ settings.followup_max ~ " relance(s) max, dans le meme fil que le premier mail") }}
 
@@ -10,15 +11,18 @@
     (3, "Fin", "Apres la derniere relance sans reponse, le contact passe en « Sans reponse ». Un contact qui repond n'est jamais relance."),
   ] %}
   <div class="card p-5">
-    <span class="font-display text-2xl text-gold-400">{{ n }}</span>
-    <p class="mt-2 text-white">{{ title }}</p>
-    <p class="mt-1 text-sm text-slate-400">{{ text }}</p>
+    <span class="step-num">{{ n }}</span>
+    <p class="mt-3 font-semibold text-fg">{{ title }}</p>
+    <p class="mt-1 text-sm text-muted">{{ text }}</p>
   </div>
   {% endfor %}
 </section>
 
-<div class="flash flash-info mt-6">Avant de relancer, clique sur <strong>Verifier inbox</strong> pour ne pas relancer quelqu'un qui a deja repondu.
-  <form method="post" action="{{ url_for('dashboard.inbox_check') }}" class="mt-3">{{ csrf() }}<button class="btn py-1.5">{{ icon("inbox", "h-4 w-4") }}Verifier inbox</button></form>
+<div class="card mt-6 flex flex-wrap items-center justify-between gap-4 p-5">
+  <p class="flex items-start gap-3 text-sm text-muted">{{ icon("info", "mt-0.5 h-4 w-4 shrink-0 text-info") }}
+    <span>Avant de relancer, clique sur <strong class="text-fg">Verifier inbox</strong> : les contacts qui t'ont deja repondu seront retires de la liste.</span></p>
+  <form method="post" action="{{ url_for('dashboard.inbox_check') }}">{{ csrf() }}
+    <button class="btn btn-sm" {{ 'disabled title="Configure ta boite mail dans Parametres"'|safe if not settings.imap_configured }}>{{ icon("inbox", "h-4 w-4") }}Verifier inbox</button></form>
 </div>
 
 {% if due %}
@@ -34,25 +38,25 @@
         {% for c in due %}
         <tr>
           <td><input type="checkbox" name="ids" value="{{ c.id }}" checked></td>
-          <td><a class="text-white hover:text-gold-400" href="{{ url_for('contacts.detail', contact_id=c.id) }}">{{ c.prenom }} {{ c.nom }}</a><div class="text-xs text-slate-500">{{ c.email }}</div></td>
-          <td class="text-slate-300">{{ c.institution }}</td>
+          <td><a class="text-fg hover:text-brand-text" href="{{ url_for('contacts.detail', contact_id=c.id) }}">{{ c.prenom }} {{ c.nom }}</a><div class="text-xs text-subtle">{{ c.email }}</div></td>
+          <td class="text-fg2">{{ c.institution }}</td>
           <td>{{ status_badge(c.status) }}</td>
-          <td class="text-slate-400">{{ c.last_sent_at[:10] }}</td>
-          <td class="text-slate-300">Relance {{ c.followups_sent + 1 }} ({{ c.lang|upper }})</td>
+          <td class="text-muted">{{ c.last_sent_at[:10] }}</td>
+          <td class="text-fg2">Relance {{ c.followups_sent + 1 }} ({{ c.lang|upper }})</td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
   <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
-    <p class="text-sm text-slate-400"><span data-select-count="ids">0</span> relance(s) selectionnee(s)</p>
-    <button class="btn btn-gold" {{ 'disabled' if job or not settings.smtp_configured }} data-confirm="Envoyer les relances selectionnees ?">{{ icon("send", "h-4 w-4") }}Envoyer les relances</button>
+    <p class="text-sm text-muted"><span data-select-count="ids">0</span> relance(s) selectionnee(s)</p>
+    <button class="btn btn-primary" {{ 'disabled' if job or not settings.smtp_configured }} data-confirm="Envoyer les relances selectionnees ?">{{ icon("send", "h-4 w-4") }}Envoyer les relances</button>
   </div>
 </form>
 {% else %}
 <div class="card mt-6 py-16 text-center">
-  <p class="text-white">Rien a relancer pour l'instant 🎉</p>
-  <p class="mt-2 text-sm text-slate-400">Les contacts apparaissent ici {{ settings.followup_delay_days }} jours apres leur dernier email, s'ils n'ont pas repondu.</p>
+  <p class="text-fg">Rien a relancer pour l'instant 🎉</p>
+  <p class="mt-2 text-sm text-muted">Les contacts apparaissent ici {{ settings.followup_delay_days }} jours apres leur dernier email, s'ils n'ont pas repondu.</p>
 </div>
 {% endif %}
 {% endblock %}

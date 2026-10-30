@@ -3,7 +3,7 @@
   <input type="hidden" name="tab" value="tous">
   <label class="relative min-w-[16rem] flex-1">
     <span class="sr-only">Rechercher</span>
-    <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">{{ icon("search", "h-4 w-4") }}</span>
+    <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-subtle">{{ icon("search", "h-4 w-4") }}</span>
     <input class="input pl-10" name="search" value="{{ filters.search }}" placeholder="Rechercher...">
   </label>
   <select class="select w-auto" name="institution" onchange="this.form.submit()" aria-label="Institution">
@@ -23,7 +23,7 @@
 <form method="post" action="{{ url_for('contacts.bulk') }}" class="mt-4">
   {{ csrf() }}
   <div class="mb-3 flex flex-wrap items-center gap-2 text-sm">
-    <span class="text-slate-400"><span data-select-count="ids">0</span> selectionne(s)</span>
+    <span class="text-muted"><span data-select-count="ids">0</span> selectionne(s)</span>
     <button name="action" value="compose" class="btn py-1.5">{{ icon("send", "h-4 w-4") }}Composer</button>
     <select name="action" class="select w-auto py-1.5" onchange="if (this.value) this.form.requestSubmit()" aria-label="Changer le statut">
       <option value="">Changer le statut...</option>
@@ -43,15 +43,15 @@
         {% for c in contacts %}
         <tr>
           <td><input type="checkbox" name="ids" value="{{ c.id }}" aria-label="Selectionner {{ c.prenom }} {{ c.nom }}"></td>
-          <td><a class="text-white hover:text-gold-400" href="{{ url_for('contacts.detail', contact_id=c.id) }}">{{ "Mme" if c.civilite == "Madame" else "M." }} {{ c.prenom }} {{ c.nom }}</a></td>
-          <td class="text-slate-300">{{ c.institution or "—" }}</td>
-          <td class="text-slate-400">{{ c.poste or "—" }}</td>
-          <td class="text-slate-400">{{ c.email or "— pas d'email" }}</td>
+          <td><a class="text-fg hover:text-brand-text" href="{{ url_for('contacts.detail', contact_id=c.id) }}">{{ "Mme" if c.civilite == "Madame" else "M." }} {{ c.prenom }} {{ c.nom }}</a></td>
+          <td class="text-fg2">{{ c.institution or "—" }}</td>
+          <td class="text-muted">{{ c.poste or "—" }}</td>
+          <td class="text-muted">{{ c.email or "— pas d'email" }}</td>
           <td>{{ status_badge(c.status) }}</td>
-          <td class="text-slate-400">{{ c.email_count }}</td>
+          <td class="text-muted">{{ c.email_count }}</td>
         </tr>
         {% else %}
-        <tr><td colspan="7" class="py-12 text-center text-slate-500">Aucun contact</td></tr>
+        <tr><td colspan="7" class="py-12 text-center text-subtle">Aucun contact</td></tr>
         {% endfor %}
       </tbody>
     </table>

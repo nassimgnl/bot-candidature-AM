@@ -1,66 +1,119 @@
 {% extends "base.html" %}
-{% from "_macros.html" import icon, status_badge, csrf, page_header with context %}
+{% from "_macros.html" import icon, status_badge, csrf with context %}
+{% set page_title = "Dashboard" %}
 {% block content %}
-<div class="flex flex-wrap items-start justify-between gap-4">
-  {{ page_header("Dashboard", "Vue d'ensemble de vos campagnes") }}
-  <div class="flex gap-3">
-    <a href="{{ url_for('contacts.index', tab='ajouter') }}" class="btn">{{ icon("plus", "h-4 w-4") }}Contact</a>
-    <a href="{{ url_for('compose.index') }}" class="btn btn-gold">{{ icon("send", "h-4 w-4") }}Composer</a>
+{# --- Accueil --- #}
+<section class="card relative overflow-hidden p-6 sm:p-8">
+  <div class="pointer-events-none absolute -right-16 -top-24 h-64 w-64 rounded-full bg-brand/25 blur-3xl" aria-hidden="true"></div>
+  <div class="relative flex flex-wrap items-end justify-between gap-6">
+    <div>
+      <p class="text-sm font-medium text-brand-text">Bot de candidatures</p>
+      <h1 class="mt-1 font-display text-[2.2rem] font-extrabold leading-tight tracking-tight text-fg sm:text-5xl">
+        Salut{{ " " ~ profile.prenom if profile.prenom }} 👋
+      </h1>
+      <p class="mt-2 max-w-xl text-muted">
+        {% if stats.contacts == 0 %}Importe tes premiers contacts pour lancer ta campagne.
+        {% elif followups_due %}{{ followups_due }} contact(s) attendent une relance aujourd'hui.
+        {% else %}{{ sent_today }} mail(s) envoye(s) aujourd'hui sur {{ settings.daily_send_limit }} possibles.{% endif %}
+      </p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <a href="{{ url_for('contacts.index', tab='ajouter') }}" class="btn">{{ icon("upload", "h-4 w-4") }}Importer des contacts</a>
+      <a href="{{ url_for('compose.index') }}" class="btn btn-primary">{{ icon("send", "h-4 w-4") }}Composer</a>
+    </div>
   </div>
-</div>
+  <div class="relative mt-6">
+    {% set pct = (100 * sent_today / settings.daily_send_limit) | round(0, 'floor') | int %}
+    <div class="flex justify-between text-xs text-subtle"><span>Envois du jour</span><span>{{ sent_today }} / {{ settings.daily_send_limit }}</span></div>
+    <div class="mt-1.5 h-2 overflow-hidden rounded-full bg-raised"><div class="h-full rounded-full bg-brand" style="width: {{ [pct, 100]|min }}%"></div></div>
+  </div>
+</section>
 
-<section class="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Chiffres cles">
+{# --- Chiffres cles --- #}
+<section class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Chiffres cles">
   {% set cards = [
-    ("users", stats.contacts, "Contacts", stats.contacts_today ~ " aujourd'hui"),
-    ("mail", stats.emails_sent, "Emails envoyes", ""),
-    ("inbox", stats.replies, "Reponses", ""),
-    ("chart", stats.reply_rate ~ "%", "Taux de reponse", ""),
+    ("users", stats.contacts, "Contacts", stats.contacts_today ~ " ajoute(s) aujourd'hui", url_for('contacts.index')),
+    ("mail", stats.emails_sent, "Emails envoyes", stats.contacted ~ " contact(s) touches", url_for('suivi.index')),
+    ("inbox", stats.replies, "Reponses", stats.interviews ~ " entretien(s)", url_for('suivi.index', status='repondu')),
+    ("chart", stats.reply_rate ~ "%", "Taux de reponse", stats.offers ~ " offre(s)", url_for('analytics.index')),
   ] %}
-  {% for ic, value, label, hint in cards %}
-  <div class="card p-6">
-    <div class="flex items-center justify-between text-slate-500">{{ icon(ic) }}<span class="text-xs">{{ hint }}</span></div>
-    <p class="mt-6 font-display text-4xl font-medium text-white">{{ value }}</p>
-    <p class="mt-1 text-sm text-slate-400">{{ label }}</p>
-  </div>
+  {% for ic, value, label, hint, href in cards %}
+  <a href="{{ href }}" class="card card-hover group p-5">
+    <div class="flex items-center justify-between">
+      <span class="flex h-9 w-9 items-center justify-center rounded-xl {{ 'bg-brand text-brand-ink' if loop.last else 'bg-raised text-muted group-hover:text-fg' }}">{{ icon(ic, "h-[18px] w-[18px]") }}</span>
+      <span class="text-xs text-subtle">{{ hint }}</span>
+    </div>
+    <p class="mt-5 font-display text-4xl font-extrabold tracking-tight text-fg">{{ value }}</p>
+    <p class="mt-1 text-sm text-muted">{{ label }}</p>
+  </a>
   {% endfor %}
 </section>
 
-{% if followups_due %}
-<a href="{{ url_for('relances.index') }}" class="card mt-6 flex items-center justify-between gap-4 border-violet-400/20 p-5 hover:bg-white/[.03]">
-  <span class="flex items-center gap-3 text-violet-200">{{ icon("repeat") }}<strong>{{ followups_due }}</strong> contact(s) a relancer (sans reponse depuis {{ settings.followup_delay_days }} jours)</span>
-  <span class="text-sm text-slate-400">Voir les relances →</span>
-</a>
-{% endif %}
+<div class="mt-6 grid gap-6 xl:grid-cols-[1.6fr_1fr]">
+  {# --- Contacts recents --- #}
+  <section class="card p-6" aria-labelledby="recent-title">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <h2 id="recent-title" class="font-display text-lg font-bold text-fg">Contacts recents</h2>
+      <form method="post" action="{{ url_for('dashboard.inbox_check') }}">
+        {{ csrf() }}
+        <button class="btn btn-sm" {{ 'disabled title="Configure ta boite mail dans Parametres"'|safe if not settings.imap_configured }}>{{ icon("inbox", "h-4 w-4") }}Verifier inbox</button>
+      </form>
+    </div>
+    {% if recent %}
+    <div class="-mx-6 mt-4 overflow-x-auto">
+      <table class="table w-full">
+        <thead><tr><th class="pl-6">Nom</th><th>Institution</th><th>Poste</th><th class="pr-6">Statut</th></tr></thead>
+        <tbody>
+          {% for c in recent %}
+          <tr>
+            <td class="pl-6"><a class="font-medium text-fg hover:text-brand-text" href="{{ url_for('contacts.detail', contact_id=c.id) }}">{{ c.prenom }} {{ c.nom }}</a></td>
+            <td>{{ c.institution or "—" }}</td>
+            <td class="text-muted">{{ c.poste or "—" }}</td>
+            <td class="pr-6">{{ status_badge(c.status) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="py-12 text-center">
+      <p class="text-muted">Aucun contact. Commence par en ajouter un.</p>
+      <a href="{{ url_for('contacts.index', tab='ajouter') }}" class="btn btn-primary mt-4">{{ icon("plus", "h-4 w-4") }}Ajouter un contact</a>
+    </div>
+    {% endif %}
+  </section>
 
-<section class="card mt-6 p-6">
-  <div class="flex flex-wrap items-center justify-between gap-3">
-    <h2 class="font-display text-lg text-white">Contacts recents</h2>
-    <form method="post" action="{{ url_for('dashboard.inbox_check') }}">
-      {{ csrf() }}
-      <button class="btn">{{ icon("inbox", "h-4 w-4") }}Verifier inbox</button>
-    </form>
-  </div>
-  {% if recent %}
-  <div class="mt-4 overflow-x-auto">
-    <table class="table w-full">
-      <thead><tr><th>Nom</th><th>Institution</th><th>Poste</th><th>Statut</th></tr></thead>
-      <tbody>
-        {% for c in recent %}
-        <tr>
-          <td><a class="text-white hover:text-gold-400" href="{{ url_for('contacts.detail', contact_id=c.id) }}">{{ c.prenom }} {{ c.nom }}</a></td>
-          <td class="text-slate-300">{{ c.institution or "—" }}</td>
-          <td class="text-slate-400">{{ c.poste or "—" }}</td>
-          <td>{{ status_badge(c.status) }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  {% else %}
-  <div class="py-12 text-center">
-    <p class="text-slate-400">Aucun contact. Commencez par en ajouter un.</p>
-    <a href="{{ url_for('contacts.index', tab='ajouter') }}" class="btn btn-gold mt-4">{{ icon("plus", "h-4 w-4") }}Ajouter un contact</a>
-  </div>
-  {% endif %}
-</section>
+  {# --- Prochaines etapes --- #}
+  <section class="card p-6" aria-labelledby="next-title">
+    <h2 id="next-title" class="font-display text-lg font-bold text-fg">Prochaines etapes</h2>
+    {% set steps = [
+      (settings.smtp_configured, "Connecter ta boite mail", url_for('settings.index')),
+      (profile.prenom and profile.ecole, "Remplir ton profil", url_for('profile.index')),
+      (profile.cv_filename, "Ajouter ton CV", url_for('profile.index')),
+      (stats.contacts > 0, "Importer des contacts", url_for('contacts.index', tab='ajouter')),
+      (stats.emails_sent > 0, "Envoyer ta premiere vague", url_for('compose.index')),
+    ] %}
+    <ol class="mt-4 space-y-1">
+      {% for done, label, href in steps %}
+      <li>
+        <a href="{{ href }}" class="flex items-center gap-3 rounded-xl px-2 py-2.5 hover:bg-raised">
+          {% if done %}
+            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-brand text-brand-ink">{{ icon("check", "h-3.5 w-3.5") }}</span>
+            <span class="text-sm text-subtle line-through">{{ label }}</span>
+          {% else %}
+            <span class="flex h-6 w-6 items-center justify-center rounded-full border border-line text-xs font-semibold text-muted">{{ loop.index }}</span>
+            <span class="text-sm font-medium text-fg">{{ label }}</span>
+            <span class="ml-auto text-subtle">→</span>
+          {% endif %}
+        </a>
+      </li>
+      {% endfor %}
+    </ol>
+    {% if followups_due %}
+    <a href="{{ url_for('relances.index') }}" class="mt-4 flex items-center justify-between gap-3 rounded-xl border border-plum/30 bg-plum/10 px-4 py-3 text-sm text-plum hover:bg-plum/15">
+      <span class="flex items-center gap-2">{{ icon("repeat", "h-4 w-4") }}<strong>{{ followups_due }}</strong> relance(s) a envoyer</span><span>→</span>
+    </a>
+    {% endif %}
+  </section>
+</div>
 {% endblock %}

@@ -1,8 +1,8 @@
 from flask import Blueprint, jsonify, render_template, request
 
-from insider import statuses
-from insider.db import get_db
-from insider.repos.contacts import ContactError, list_contacts, set_status
+from botnassimgnl import statuses
+from botnassimgnl.db import get_db
+from botnassimgnl.repos.contacts import ContactError, list_contacts, set_status
 
 bp = Blueprint("pipeline", __name__, url_prefix="/pipeline")
 

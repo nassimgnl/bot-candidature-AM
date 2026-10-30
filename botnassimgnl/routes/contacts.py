@@ -1,13 +1,13 @@
 from flask import (Blueprint, flash, jsonify, redirect, render_template, request,
                    send_from_directory, url_for)
 
-from insider.csv_import import ImportFileError, parse_contacts_file
-from insider.db import get_db
-from insider.email_format import EmailFormatError
-from insider.repos import contacts as repo
-from insider.repos.emails import history
-from insider.repos.institutions import find_patterns, list_institutions
-from insider.routes.helpers import form_ids
+from botnassimgnl.csv_import import ImportFileError, parse_contacts_file
+from botnassimgnl.db import get_db
+from botnassimgnl.email_format import EmailFormatError
+from botnassimgnl.repos import contacts as repo
+from botnassimgnl.repos.emails import history
+from botnassimgnl.repos.institutions import find_patterns, list_institutions
+from botnassimgnl.routes.helpers import form_ids
 
 bp = Blueprint("contacts", __name__, url_prefix="/contacts")
 

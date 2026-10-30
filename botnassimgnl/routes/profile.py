@@ -3,9 +3,9 @@ from pathlib import Path
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from werkzeug.utils import secure_filename
 
-from insider.db import get_db
-from insider.repos.profile import get_profile, set_cv_filename, update_profile
-from insider.routes.helpers import app_settings
+from botnassimgnl.db import get_db
+from botnassimgnl.repos.profile import get_profile, set_cv_filename, update_profile
+from botnassimgnl.routes.helpers import app_settings
 
 bp = Blueprint("profile", __name__, url_prefix="/profil")
 

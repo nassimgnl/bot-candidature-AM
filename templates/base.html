@@ -1,72 +1,113 @@
 {% from "_macros.html" import icon with context %}
 <!doctype html>
-<html lang="fr">
+<html lang="fr" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>INSIDER — Bot de candidatures</title>
+  <title>{% block title %}{{ page_title|default("Bot de candidatures") }}{% endblock %} · BOT nassimgnl</title>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='logo.svg') }}">
+  <script>
+    // Applique le theme avant l'affichage pour eviter un flash de couleur.
+    (() => {
+      let theme = "dark";
+      try {
+        theme = localStorage.getItem("theme") || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+      } catch (e) { /* stockage indisponible : theme sombre par defaut */ }
+      document.documentElement.dataset.theme = theme;
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Unbounded:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script>
-    tailwind.config = { theme: { extend: {
-      fontFamily: { sans: ["Inter", "system-ui", "sans-serif"], display: ["Unbounded", "Inter", "sans-serif"] },
-      colors: { gold: { 300: "#f0d58c", 400: "#e2c06f", 500: "#c9a54e", 600: "#a8873a" }, ink: { 900: "#070b14", 800: "#0b111d", 700: "#111a2b", 600: "#18233a" } }
-    } } };
+    const token = (name) => `rgb(var(--${name}) / <alpha-value>)`;
+    tailwind.config = {
+      darkMode: ["selector", '[data-theme="dark"]'],
+      theme: { extend: {
+        fontFamily: { sans: ["Inter", "system-ui", "sans-serif"], display: ["Bricolage Grotesque", "Inter", "sans-serif"] },
+        colors: Object.fromEntries(["canvas", "sidebar", "surface", "raised", "line", "fg", "fg2", "muted", "subtle",
+          "brand", "brand-ink", "brand-text", "success", "danger", "warn", "info", "plum"].map((n) => [n, token(n)])),
+      } },
+    };
   </script>
   <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
 </head>
-<body class="min-h-screen bg-ink-900 font-sans text-slate-200 antialiased">
-  <div class="grid-bg"></div>
-  <aside class="fixed inset-y-0 left-0 z-20 hidden w-64 flex-col border-r border-white/5 bg-ink-800/95 lg:flex">
-    <a href="{{ url_for('dashboard.index') }}" class="flex items-center gap-3 px-5 py-5">
-      <span class="logo">INSIDER</span>
-      <span class="text-[13px] font-semibold leading-tight text-white">Bot de<br>candidatures</span>
-    </a>
-    <div class="mx-5 h-px bg-white/5"></div>
-    {% set nav = [
-      ("dashboard.index", "Dashboard", "dashboard"),
-      ("contacts.index", "Contacts", "users"),
-      ("suivi.index", "Suivi", "clipboard"),
-      ("compose.index", "Compose", "mail"),
-      ("relances.index", "Relances", "repeat"),
-      ("pipeline.index", "Pipeline", "pipeline"),
-      ("analytics.index", "Analytics", "chart"),
-      ("formats.index", "Formats mail", "at"),
-      ("profile.index", "Profil", "user"),
-      ("settings.index", "Parametres", "settings"),
-    ] %}
-    <nav class="mt-4 flex flex-1 flex-col gap-1 px-3">
+<body class="min-h-screen font-sans antialiased">
+  <div class="backdrop" aria-hidden="true"></div>
+  {% set nav = [
+    ("dashboard.index", "Dashboard", "dashboard"),
+    ("contacts.index", "Contacts", "users"),
+    ("suivi.index", "Suivi", "clipboard"),
+    ("compose.index", "Compose", "mail"),
+    ("relances.index", "Relances", "repeat"),
+    ("pipeline.index", "Pipeline", "pipeline"),
+    ("analytics.index", "Analytics", "chart"),
+    ("formats.index", "Formats mail", "at"),
+    ("profile.index", "Profil", "user"),
+    ("settings.index", "Parametres", "settings"),
+  ] %}
+  {% set current = request.endpoint.split('.')[0] if request.endpoint else '' %}
+
+  {% macro brand(size="text-[1.05rem]") -%}
+  <a href="{{ url_for('dashboard.index') }}" class="flex items-center gap-3" aria-label="BOT nassimgnl — accueil">
+    <img src="{{ url_for('static', filename='logo.svg') }}" alt="" class="brand-mark" width="40" height="40">
+    <span class="flex flex-col">
+      <span class="brand-word {{ size }} font-extrabold text-fg">BOT</span>
+      <span class="brand-word text-[.8rem] font-medium text-muted">nassimgnl</span>
+    </span>
+  </a>
+  {%- endmacro %}
+
+  {% macro theme_toggle() -%}
+  <button type="button" class="btn btn-ghost btn-sm" data-theme-toggle aria-label="Changer de theme (clair / sombre)" title="Mode clair / sombre">
+    <span class="theme-icon-dark">{{ icon("moon", "h-4 w-4") }}</span>
+    <span class="theme-icon-light">{{ icon("sun", "h-4 w-4") }}</span>
+    <span class="hidden sm:inline" data-theme-label>Mode sombre</span>
+  </button>
+  {%- endmacro %}
+
+  <aside class="fixed inset-y-0 left-0 z-20 hidden w-64 flex-col border-r border-line bg-sidebar/90 backdrop-blur lg:flex" aria-label="Menu principal">
+    <div class="px-5 pb-5 pt-6">{{ brand() }}</div>
+    <nav class="flex flex-1 flex-col gap-0.5 overflow-y-auto px-3">
       {% for endpoint, label, ic in nav %}
-        {% set active = request.endpoint and request.endpoint.split('.')[0] == endpoint.split('.')[0] %}
-        <a href="{{ url_for(endpoint) }}" class="nav-link {{ 'nav-active' if active }}">
+        {% set active = current == endpoint.split('.')[0] %}
+        <a href="{{ url_for(endpoint) }}" class="nav-link {{ 'nav-active' if active }}" {{ 'aria-current="page"'|safe if active }}>
           {{ icon(ic) }}<span>{{ label }}</span>
+          {% if endpoint == "relances.index" and nav_followups %}<span class="nav-badge" title="{{ nav_followups }} relance(s) a envoyer">{{ nav_followups }}</span>{% endif %}
         </a>
       {% endfor %}
     </nav>
-    <div class="mx-5 h-px bg-white/5"></div>
-    <div class="px-5 py-4 text-xs text-slate-500">
+    <div class="space-y-3 border-t border-line px-5 py-4">
       {% if settings.smtp_configured %}
-        <span class="inline-flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-emerald-400"></span>{{ settings.smtp_user }}</span>
+        <a href="{{ url_for('settings.index') }}" class="flex items-center gap-2 truncate text-xs text-muted hover:text-fg"><span class="h-2 w-2 shrink-0 rounded-full bg-success"></span><span class="truncate">{{ settings.smtp_user }}</span></a>
       {% else %}
-        <a href="{{ url_for('settings.index') }}" class="inline-flex items-center gap-2 text-rose-300"><span class="h-2 w-2 rounded-full bg-rose-400"></span>Boite mail non configuree</a>
+        <a href="{{ url_for('settings.index') }}" class="flex items-center gap-2 text-xs font-medium text-danger hover:underline"><span class="h-2 w-2 shrink-0 rounded-full bg-danger"></span>Boite mail non configuree</a>
       {% endif %}
+      {{ theme_toggle() }}
     </div>
   </aside>
 
-  <nav class="sticky top-0 z-20 flex gap-1 overflow-x-auto border-b border-white/5 bg-ink-800/95 px-3 py-2 lg:hidden">
-    {% for endpoint, label, ic in nav %}
-      <a href="{{ url_for(endpoint) }}" class="whitespace-nowrap rounded-lg px-3 py-1.5 text-sm text-slate-300 hover:bg-white/5">{{ label }}</a>
-    {% endfor %}
-  </nav>
+  <header class="sticky top-0 z-30 border-b border-line bg-sidebar/90 backdrop-blur lg:hidden">
+    <div class="flex items-center justify-between px-4 py-3">{{ brand("text-base") }}{{ theme_toggle() }}</div>
+    <nav class="flex gap-1 overflow-x-auto px-3 pb-2" aria-label="Menu principal">
+      {% for endpoint, label, ic in nav %}
+        <a href="{{ url_for(endpoint) }}" class="tab shrink-0 {{ 'tab-active' if current == endpoint.split('.')[0] }}">{{ label }}</a>
+      {% endfor %}
+    </nav>
+  </header>
 
-  <main class="relative z-10 px-4 py-8 sm:px-8 lg:ml-64 lg:px-16 lg:py-10">
+  <main class="relative z-10 mx-auto max-w-[1400px] px-4 py-8 sm:px-8 lg:ml-64 lg:px-14 lg:py-10">
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
-        <div class="mb-6 space-y-2">
+        <div class="mb-6 space-y-2" role="status">
           {% for category, message in messages %}
-            <div class="flash flash-{{ category }}">{{ message }}</div>
+            <div class="flash flash-{{ category }}">
+              {{ icon({"success": "check", "error": "alert"}.get(category, "info"), "mt-0.5 h-4 w-4 shrink-0") }}
+              <span>{{ message }}</span>
+              <button type="button" class="flash-close" aria-label="Fermer" data-dismiss>{{ icon("x", "h-4 w-4") }}</button>
+            </div>
           {% endfor %}
         </div>
       {% endif %}

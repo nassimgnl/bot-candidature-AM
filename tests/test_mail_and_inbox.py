@@ -1,5 +1,5 @@
-from insider.inbox import InboxMessage, classify
-from insider.mailer import OutgoingEmail, build_message
+from botnassimgnl.inbox import InboxMessage, classify
+from botnassimgnl.mailer import OutgoingEmail, build_message
 
 
 def test_build_message_sets_threading_headers_and_attachment(settings, tmp_path):

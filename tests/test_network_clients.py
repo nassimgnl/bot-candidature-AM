@@ -5,11 +5,11 @@ from dataclasses import replace
 
 import pytest
 
-from insider import inbox, mailer
-from insider.config import load_settings
-from insider.mailer import MailerError, OutgoingEmail
-from insider.repos import contacts as contacts_repo
-from insider.repos.emails import record_email
+from botnassimgnl import inbox, mailer
+from botnassimgnl.config import load_settings
+from botnassimgnl.mailer import MailerError, OutgoingEmail
+from botnassimgnl.repos import contacts as contacts_repo
+from botnassimgnl.repos.emails import record_email
 
 
 class FakeSMTP:

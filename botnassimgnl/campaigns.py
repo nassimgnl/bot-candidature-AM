@@ -5,12 +5,12 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from insider import statuses
-from insider.config import Settings
-from insider.repos.emails import first_email
-from insider.repos.profile import get_profile
-from insider.repos.templates import followup_template
-from insider.templating import build_context, render
+from botnassimgnl import statuses
+from botnassimgnl.config import Settings
+from botnassimgnl.repos.emails import first_email
+from botnassimgnl.repos.profile import get_profile
+from botnassimgnl.repos.templates import followup_template
+from botnassimgnl.templating import build_context, render
 
 SQLITE_DATETIME = "%Y-%m-%d %H:%M:%S"
 

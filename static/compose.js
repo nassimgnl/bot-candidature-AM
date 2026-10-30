@@ -39,7 +39,8 @@
 
   const refreshPreview = debounce(async () => {
     const ids = selectedIds();
-    sendBtn.disabled = !(ids.length && subject.value.trim() && body.value.trim());
+    const smtpReady = sendBtn.dataset.smtpReady === "true";
+    sendBtn.disabled = !(smtpReady && ids.length && subject.value.trim() && body.value.trim());
     if (!subject.value.trim() && !body.value.trim()) return;
     try {
       const data = await postJSON(form.dataset.previewUrl, { contact_id: ids[0] || "", subject: subject.value, body: body.value });

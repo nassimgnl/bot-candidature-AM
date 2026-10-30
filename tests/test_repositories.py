@@ -1,9 +1,9 @@
 import pytest
 
-from insider.repos import contacts as contacts_repo
-from insider.repos.institutions import (InstitutionError, create_institution, delete_institution,
+from botnassimgnl.repos import contacts as contacts_repo
+from botnassimgnl.repos.institutions import (InstitutionError, create_institution, delete_institution,
                                         find_patterns, list_institutions, update_institution)
-from insider.repos.templates import TemplateError, create_template, followup_template
+from botnassimgnl.repos.templates import TemplateError, create_template, followup_template
 
 
 def test_seed_loads_banks_and_ten_templates(conn):

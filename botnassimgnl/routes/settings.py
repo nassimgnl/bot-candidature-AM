@@ -1,18 +1,19 @@
 from flask import Blueprint, flash, redirect, render_template, url_for
 
-from insider.config import SMTP_PRESETS
-from insider.db import get_db
-from insider.inbox import InboxError, check_inbox
-from insider.mailer import MailerError, test_connection
-from insider.repos.emails import sent_today
-from insider.routes.helpers import app_settings
+from botnassimgnl.config import SMTP_PRESETS, detect_provider
+from botnassimgnl.db import get_db
+from botnassimgnl.inbox import InboxError, check_inbox
+from botnassimgnl.mailer import MailerError, test_connection
+from botnassimgnl.repos.emails import sent_today
+from botnassimgnl.routes.helpers import app_settings
 
 bp = Blueprint("settings", __name__, url_prefix="/parametres")
 
 
 @bp.get("/")
 def index():
-    return render_template("settings.html", presets=SMTP_PRESETS, sent_today=sent_today(get_db()))
+    return render_template("settings.html", presets=SMTP_PRESETS, sent_today=sent_today(get_db()),
+                           active_provider=detect_provider(app_settings().smtp_host))
 
 
 @bp.post("/test-smtp")

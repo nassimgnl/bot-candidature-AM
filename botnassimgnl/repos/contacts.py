@@ -4,9 +4,9 @@ import re
 import sqlite3
 from dataclasses import dataclass, field
 
-from insider import statuses
-from insider.email_format import EmailFormatError, build_email
-from insider.repos.institutions import find_patterns
+from botnassimgnl import statuses
+from botnassimgnl.email_format import EmailFormatError, build_email
+from botnassimgnl.repos.institutions import find_patterns
 
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[a-z]{2,}$", re.IGNORECASE)
 CIVILITES = ("Monsieur", "Madame")

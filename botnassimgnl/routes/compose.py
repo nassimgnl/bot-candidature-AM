@@ -2,16 +2,16 @@ from pathlib import Path
 
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 
-from insider.campaigns import prepare_initial
-from insider.db import get_db
-from insider.mailer import MailerError, OutgoingEmail, send_email
-from insider.repos import templates as template_repo
-from insider.repos.contacts import get_contact, get_contacts, list_contacts
-from insider.repos.profile import get_profile
-from insider.routes.helpers import app_settings, form_ids
-from insider.routes.profile import save_upload
-from insider.sender import active_job, get_job, start_job
-from insider.templating import VARIABLES_HELP, build_context, render
+from botnassimgnl.campaigns import prepare_initial
+from botnassimgnl.db import get_db
+from botnassimgnl.mailer import MailerError, OutgoingEmail, send_email
+from botnassimgnl.repos import templates as template_repo
+from botnassimgnl.repos.contacts import get_contact, get_contacts, list_contacts
+from botnassimgnl.repos.profile import get_profile
+from botnassimgnl.routes.helpers import app_settings, form_ids
+from botnassimgnl.routes.profile import save_upload
+from botnassimgnl.sender import active_job, get_job, start_job
+from botnassimgnl.templating import VARIABLES_HELP, build_context, render
 
 bp = Blueprint("compose", __name__, url_prefix="/compose")
 

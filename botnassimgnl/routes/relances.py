@@ -1,11 +1,11 @@
 from flask import Blueprint, flash, redirect, render_template, url_for
 
-from insider.campaigns import due_followups, expire_followups, prepare_followups
-from insider.db import get_db
-from insider.repos.contacts import get_contacts
-from insider.repos.profile import get_profile
-from insider.routes.helpers import app_settings, form_ids
-from insider.sender import active_job, start_job
+from botnassimgnl.campaigns import due_followups, expire_followups, prepare_followups
+from botnassimgnl.db import get_db
+from botnassimgnl.repos.contacts import get_contacts
+from botnassimgnl.repos.profile import get_profile
+from botnassimgnl.routes.helpers import app_settings, form_ids
+from botnassimgnl.sender import active_job, start_job
 
 bp = Blueprint("relances", __name__, url_prefix="/relances")
 

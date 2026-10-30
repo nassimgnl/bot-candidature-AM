@@ -1,8 +1,8 @@
 from flask import Blueprint, render_template
 
-from insider.db import get_db
-from insider.repos.emails import sends_per_day
-from insider.stats import overview, status_counts
+from botnassimgnl.db import get_db
+from botnassimgnl.repos.emails import sends_per_day
+from botnassimgnl.stats import overview, status_counts
 
 bp = Blueprint("analytics", __name__, url_prefix="/analytics")
 

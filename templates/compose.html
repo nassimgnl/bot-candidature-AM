@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "_macros.html" import icon, status_badge, csrf, page_header with context %}
+{% set page_title = "Compose" %}
 {% block content %}
 {{ page_header("Composer un email", templates|length ~ " templates disponibles — " ~ contacts|length ~ " contact" ~ ("s" if contacts|length > 1 else "")) }}
 
@@ -13,11 +14,11 @@
 {% if job %}
 <section class="card mt-6 p-5" id="job" data-url="{{ url_for('compose.job_status', job_id=job.id) }}" data-stop="{{ url_for('compose.job_stop', job_id=job.id) }}">
   <div class="flex flex-wrap items-center justify-between gap-3">
-    <p class="text-white">Envoi en cours : <span data-progress>{{ job.sent + job.failed }} / {{ job.total }}</span> <span class="text-sm text-slate-400" data-state></span></p>
+    <p class="text-fg">Envoi en cours : <span data-progress>{{ job.sent + job.failed }} / {{ job.total }}</span> <span class="text-sm text-muted" data-state></span></p>
     <button type="button" class="btn btn-danger py-1.5" data-stop-btn>Arreter</button>
   </div>
-  <div class="mt-3 h-2 overflow-hidden rounded-full bg-white/5"><div class="h-full bg-gold-400 transition-[width]" data-bar style="width:0%"></div></div>
-  <ul class="mt-3 max-h-40 space-y-1 overflow-y-auto text-sm text-slate-400" data-log></ul>
+  <div class="mt-3 h-2 overflow-hidden rounded-full bg-raised"><div class="h-full bg-brand transition-[width]" data-bar style="width:0%"></div></div>
+  <ul class="mt-3 max-h-40 space-y-1 overflow-y-auto text-sm text-muted" data-log></ul>
 </section>
 {% endif %}
 
@@ -27,19 +28,19 @@
   <section class="card space-y-6 p-6">
     <div>
       <div class="flex items-center justify-between">
-        <span class="text-white">Destinataires</span>
-        <span class="text-sm text-slate-400"><span data-select-count="ids">0</span> / {{ contacts|length }} contact(s)</span>
+        <span class="text-fg">Destinataires</span>
+        <span class="text-sm text-muted"><span data-select-count="ids">0</span> / {{ contacts|length }} contact(s)</span>
       </div>
       {% if contacts %}
       <div class="mt-3 flex gap-2">
         <input class="input py-2" id="recipient-search" placeholder="Filtrer (nom, banque, statut)...">
         <label class="btn shrink-0 py-2"><input type="checkbox" data-select-all="ids" class="mr-1">Tous</label>
       </div>
-      <div class="mt-2 max-h-56 space-y-1 overflow-y-auto rounded-2xl border border-white/5 p-2" id="recipients">
+      <div class="mt-2 max-h-56 space-y-1 overflow-y-auto rounded-2xl border border-line p-2" id="recipients">
         {% for c in contacts %}
-        <label class="flex cursor-pointer items-center gap-3 rounded-xl px-2 py-1.5 hover:bg-white/[.04]" data-search="{{ (c.prenom ~ ' ' ~ c.nom ~ ' ' ~ c.institution ~ ' ' ~ status_label(c.status))|lower }}">
+        <label class="flex cursor-pointer items-center gap-3 rounded-xl px-2 py-1.5 hover:bg-raised" data-search="{{ (c.prenom ~ ' ' ~ c.nom ~ ' ' ~ c.institution ~ ' ' ~ status_label(c.status))|lower }}">
           <input type="checkbox" name="ids" value="{{ c.id }}" {{ 'checked' if c.id in preselected }}>
-          <span class="flex-1 truncate text-sm text-white">{{ c.prenom }} {{ c.nom }} <span class="text-slate-500">· {{ c.institution }}</span></span>
+          <span class="flex-1 truncate text-sm text-fg">{{ c.prenom }} {{ c.nom }} <span class="text-subtle">· {{ c.institution }}</span></span>
           {{ status_badge(c.status) }}
         </label>
         {% endfor %}
@@ -58,7 +59,7 @@
           {% for key, label in categories.items() %}<button type="button" class="tab" data-cat="{{ key }}">{{ label }}</button>{% endfor %}
         </div>
       </div>
-      <p class="mt-5 text-xs uppercase tracking-widest text-slate-500">Templates (<span id="tpl-count">0</span>)</p>
+      <p class="mt-5 text-xs uppercase tracking-widest text-subtle">Templates (<span id="tpl-count">0</span>)</p>
       <div class="mt-2 flex flex-wrap gap-2" id="tpl-list">
         {% for t in templates %}
         <button type="button" class="btn py-1.5 text-sm" data-template='{{ t|tojson|forceescape }}'>{{ t.name }}</button>
@@ -68,50 +69,61 @@
 
     <label class="block"><span class="label">Sujet</span><input class="input" name="subject" id="subject" placeholder="Objet de l'email..." required></label>
     <label class="block"><span class="label">Message</span><textarea class="textarea font-mono text-[13px] leading-relaxed" name="body" id="body" rows="14" placeholder="Corps de l'email..." required></textarea></label>
-    <p class="text-xs text-slate-500">Variables :
-      {% for v in variables %}<button type="button" class="mx-0.5 rounded bg-white/5 px-1.5 py-0.5 font-mono text-slate-300 hover:bg-white/10" data-var="{{ v }}">{{ v }}</button>{% endfor %}
+    <p class="text-xs text-subtle">Variables :
+      {% for v in variables %}<button type="button" class="mx-0.5 rounded bg-raised px-1.5 py-0.5 font-mono text-fg2 hover:bg-line" data-var="{{ v }}">{{ v }}</button>{% endfor %}
     </p>
 
-    <div class="grid gap-3 sm:grid-cols-2">
-      <label class="flex items-center gap-2 text-sm text-slate-300">
-        <input type="checkbox" name="attach_cv" value="1" {{ 'checked' if profile.cv_filename else 'disabled' }}>
-        {% if profile.cv_filename %}Joindre mon CV ({{ profile.cv_filename }}){% else %}Pas de CV — <a class="text-gold-400 underline" href="{{ url_for('profile.index') }}">ajoute-le dans Profil</a>{% endif %}
+    <fieldset class="space-y-3 rounded-2xl border border-line p-4">
+      <legend class="px-1 text-sm font-semibold text-fg">Pieces jointes</legend>
+      {% if profile.cv_filename %}
+      <label class="flex items-center gap-3 text-sm text-fg2">
+        <input type="checkbox" name="attach_cv" value="1" checked>
+        <span>Joindre mon CV <span class="kbd">{{ profile.cv_filename }}</span></span>
       </label>
-      <label class="text-sm text-slate-300"><span class="label">Joindre un autre fichier</span><input type="file" name="attachment" class="text-xs text-slate-400"></label>
-    </div>
+      {% else %}
+      <p class="flex flex-wrap items-center gap-x-2 text-sm text-muted">{{ icon("alert", "h-4 w-4 text-warn") }}Aucun CV enregistre. <a class="link" href="{{ url_for('profile.index') }}">Ajouter mon CV dans Profil →</a></p>
+      {% endif %}
+      <label class="block min-w-0 text-sm"><span class="label">Autre fichier (optionnel)</span>
+        <input type="file" name="attachment" class="w-full min-w-0" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"></label>
+    </fieldset>
 
-    <div class="flex flex-wrap gap-2 border-t border-white/5 pt-4" id="tpl-actions">
-      <button type="button" class="btn py-1.5 text-sm" id="tpl-save-new">Sauvegarder comme template</button>
-      <button type="button" class="btn hidden py-1.5 text-sm" id="tpl-update">Sauvegarder</button>
-      <button type="button" class="btn btn-danger hidden py-1.5 text-sm" id="tpl-delete">Supprimer le template</button>
+    <div class="flex flex-wrap gap-2 border-t border-line pt-4" id="tpl-actions">
+      <button type="button" class="btn btn-sm" id="tpl-save-new">{{ icon("plus", "h-4 w-4") }}Sauvegarder comme template</button>
+      <button type="button" class="btn btn-sm hidden" id="tpl-update">{{ icon("check", "h-4 w-4") }}Sauvegarder</button>
+      <button type="button" class="btn btn-sm btn-danger hidden" id="tpl-delete">{{ icon("trash", "h-4 w-4") }}Supprimer</button>
     </div>
   </section>
 
-  <div class="space-y-6">
+  <div class="min-w-0 space-y-6">
     <section class="card p-6" aria-labelledby="preview-title">
-      <h2 id="preview-title" class="text-white">Apercu</h2>
-      <div id="preview-empty" class="flex flex-col items-center py-14 text-center text-slate-500">
+      <h2 id="preview-title" class="font-display text-lg font-bold text-fg">Apercu</h2>
+      {% if not (profile.prenom and profile.ecole) %}
+      <p class="flash flash-info mt-3 text-sm">{{ icon("info", "mt-0.5 h-4 w-4 shrink-0") }}<span>Ton profil est incomplet : {Mon_Prenom}, {Mon_Ecole}… resteront vides. <a class="link" href="{{ url_for('profile.index') }}">Completer mon profil</a></span></p>
+      {% endif %}
+      <div id="preview-empty" class="flex flex-col items-center py-14 text-center text-subtle">
         {{ icon("send", "h-8 w-8") }}
         <p class="mt-4">Selectionnez un contact et un template<br>pour voir l'apercu de l'email</p>
       </div>
       <div id="preview" class="hidden">
-        <p class="text-sm text-slate-400">A : <span class="text-white" id="pv-to"></span></p>
-        <p class="mt-1 text-sm text-slate-400">Objet : <span class="text-white" id="pv-subject"></span></p>
-        <pre class="mt-4 max-h-[28rem] overflow-y-auto whitespace-pre-wrap rounded-2xl bg-ink-900/60 p-4 font-sans text-sm leading-relaxed text-slate-200" id="pv-body"></pre>
+        <p class="text-sm text-muted">A : <span class="text-fg" id="pv-to"></span></p>
+        <p class="mt-1 text-sm text-muted">Objet : <span class="text-fg" id="pv-subject"></span></p>
+        <pre class="mt-4 max-h-[28rem] overflow-y-auto whitespace-pre-wrap rounded-2xl bg-raised p-4 font-sans text-sm leading-relaxed text-fg2" id="pv-body"></pre>
       </div>
     </section>
 
     <label class="card flex gap-3 p-5">
       <input type="checkbox" name="force" value="1" class="mt-1">
-      <span><span class="text-white">Forcer renvoi (relance)</span><br>
-      <span class="text-sm text-slate-400">Par defaut, les contacts deja contactes sont ignores. Coche pour les relancer.</span></span>
+      <span><span class="text-fg">Forcer renvoi (relance)</span><br>
+      <span class="text-sm text-muted">Par defaut, les contacts deja contactes sont ignores. Coche pour les relancer.</span></span>
     </label>
 
     <div class="grid gap-3 sm:grid-cols-[auto_1fr]">
       <button class="btn" formaction="{{ url_for('compose.send_test') }}" formnovalidate {{ 'disabled' if not settings.smtp_configured }}>M'envoyer un mail test</button>
-      <button class="btn btn-gold py-4 text-base" id="send-btn" disabled data-confirm="Envoyer ces emails pour de vrai ?">{{ icon("send") }}Envoyer</button>
+      <button class="btn btn-primary py-4 text-base" id="send-btn" disabled data-smtp-ready="{{ 'true' if settings.smtp_configured else 'false' }}"
+              {{ 'title="Configure ta boite mail dans Parametres"'|safe if not settings.smtp_configured }}
+              data-confirm="Envoyer ces emails pour de vrai ?">{{ icon("send") }}Envoyer</button>
     </div>
-    <p class="text-xs text-slate-500">Un email toutes les {{ settings.send_delay_seconds }} s · max {{ settings.daily_send_limit }} / jour. Astuce : envoie entre 11h et 14h.</p>
+    <p class="text-xs text-subtle">Un email toutes les {{ settings.send_delay_seconds }} s · max {{ settings.daily_send_limit }} / jour. Astuce : envoie entre 11h et 14h.</p>
   </div>
 </form>
 

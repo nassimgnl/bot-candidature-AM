@@ -1,0 +1,28 @@
+{# Logos des fournisseurs mail, dessines en SVG (aucune requete externe). #}
+{% macro provider_logo(name, cls="h-7 w-7") -%}
+{% if name == "gmail" %}
+<svg class="{{ cls }}" viewBox="0 0 48 48" aria-hidden="true">
+  <path fill="#4caf50" d="M45 16.2l-5 2.75-5 4.75V40h7c1.657 0 3-1.343 3-3V16.2z"/>
+  <path fill="#1e88e5" d="M3 16.2l3.614 1.71L13 23.7V40H6c-1.657 0-3-1.343-3-3V16.2z"/>
+  <polygon fill="#e53935" points="35,11.2 24,19.45 13,11.2 12,17 13,23.7 24,31.95 35,23.7 36,17"/>
+  <path fill="#c62828" d="M3 12.298V16.2l10 7.5V11.2L9.876 8.859C9.132 8.301 8.228 8 7.298 8 4.924 8 3 9.924 3 12.298z"/>
+  <path fill="#fbc02d" d="M45 12.298V16.2l-10 7.5V11.2l3.124-2.341C38.868 8.301 39.772 8 40.702 8 43.076 8 45 9.924 45 12.298z"/>
+</svg>
+{% elif name == "outlook" %}
+<svg class="{{ cls }}" viewBox="0 0 48 48" aria-hidden="true">
+  <rect x="17" y="11" width="27" height="26" rx="3" fill="#fff" opacity=".92"/>
+  <path d="M17.5 17 30.5 26 43.5 17" fill="none" stroke="#0078d4" stroke-width="2.4" stroke-linejoin="round"/>
+  <rect x="4" y="13" width="22" height="22" rx="3.5" fill="#fff"/>
+  <ellipse cx="15" cy="24" rx="5" ry="6.4" fill="none" stroke="#0078d4" stroke-width="3"/>
+</svg>
+{% elif name == "yahoo" %}
+<svg class="{{ cls }}" viewBox="0 0 48 48" aria-hidden="true">
+  <rect width="48" height="48" rx="10" fill="#fff"/>
+  <text x="23" y="34" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="24" fill="#6001d2">y!</text>
+</svg>
+{% else %}
+<svg class="{{ cls }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+  <rect x="2" y="3" width="20" height="7" rx="2"/><rect x="2" y="14" width="20" height="7" rx="2"/><path d="M6 6.5h.01M6 17.5h.01"/>
+</svg>
+{% endif %}
+{%- endmacro %}

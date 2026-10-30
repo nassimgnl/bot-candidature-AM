@@ -2,7 +2,7 @@
 
 import sqlite3
 
-from insider.email_format import format_example, validate_format
+from botnassimgnl.email_format import format_example, validate_format
 
 
 class InstitutionError(ValueError):

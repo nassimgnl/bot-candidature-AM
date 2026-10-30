@@ -2,9 +2,9 @@
 
 import sqlite3
 
-from insider.repos.institutions import create_institution
-from insider.repos.templates import create_template
-from insider.seed_data import INSTITUTIONS, TEMPLATES, expand_format
+from botnassimgnl.repos.institutions import create_institution
+from botnassimgnl.repos.templates import create_template
+from botnassimgnl.seed_data import INSTITUTIONS, TEMPLATES, expand_format
 
 SEED_FLAG = "seeded_v1"
 

@@ -1,22 +1,28 @@
 {% extends "base.html" %}
 {% from "_macros.html" import icon, csrf, page_header with context %}
+{% set page_title = "Profil" %}
 {% block content %}
 {{ page_header("Profil", "Ces informations sont utilisees dans les templates d'email") }}
 
 <form method="post" enctype="multipart/form-data" class="card mt-8 grid max-w-3xl gap-5 p-6 sm:grid-cols-2">
   {{ csrf() }}
-  <label><span class="label">Prenom <code class="text-xs text-slate-500">{Mon_Prenom}</code></span><input class="input" name="prenom" value="{{ profile.prenom }}"></label>
-  <label><span class="label">Nom <code class="text-xs text-slate-500">{Mon_Nom}</code></span><input class="input" name="nom" value="{{ profile.nom }}"></label>
-  <label><span class="label">Ecole <code class="text-xs text-slate-500">{Mon_Ecole}</code></span><input class="input" name="ecole" value="{{ profile.ecole }}" placeholder="HEC, ESSEC, Dauphine..."></label>
-  <label><span class="label">Poste actuel <code class="text-xs text-slate-500">{Mon_Poste}</code></span><input class="input" name="poste_actuel" value="{{ profile.poste_actuel }}" placeholder="Etudiant M1 Finance..."></label>
+  <label><span class="label">Prenom <code class="text-xs text-subtle">{Mon_Prenom}</code></span><input class="input" name="prenom" value="{{ profile.prenom }}"></label>
+  <label><span class="label">Nom <code class="text-xs text-subtle">{Mon_Nom}</code></span><input class="input" name="nom" value="{{ profile.nom }}"></label>
+  <label><span class="label">Ecole <code class="text-xs text-subtle">{Mon_Ecole}</code></span><input class="input" name="ecole" value="{{ profile.ecole }}" placeholder="HEC, ESSEC, Dauphine..."></label>
+  <label><span class="label">Poste actuel <code class="text-xs text-subtle">{Mon_Poste}</code></span><input class="input" name="poste_actuel" value="{{ profile.poste_actuel }}" placeholder="Etudiant M1 Finance..."></label>
   <div class="sm:col-span-2">
     <span class="label">CV (joint aux emails)</span>
     {% if profile.cv_filename %}
-      <p class="mb-2 flex items-center gap-2 text-sm text-emerald-300">{{ icon("check", "h-4 w-4") }}{{ profile.cv_filename }}
-        <button class="ml-2 text-rose-300 hover:underline" formaction="{{ url_for('profile.delete_cv') }}">retirer</button></p>
+      <p class="mb-2 flex items-center gap-2 text-sm text-success">{{ icon("check", "h-4 w-4") }}{{ profile.cv_filename }}
+        <button class="ml-2 text-danger hover:underline" formaction="{{ url_for('profile.delete_cv') }}">retirer</button></p>
     {% endif %}
-    <input type="file" name="cv" accept=".pdf,.doc,.docx" class="text-sm text-slate-400">
+    <label class="dropzone flex cursor-pointer flex-wrap items-center gap-4 px-5 py-4">
+      <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-raised text-muted">{{ icon("upload", "h-5 w-5") }}</span>
+      <span class="flex-1 text-sm"><span class="font-semibold text-fg">{{ "Remplacer mon CV" if profile.cv_filename else "Choisir mon CV" }}</span><br>
+        <span class="text-subtle">PDF ou Word · 10 Mo max</span></span>
+      <input type="file" name="cv" accept=".pdf,.doc,.docx" class="min-w-0 max-w-full">
+    </label>
   </div>
-  <button class="btn btn-gold sm:col-span-2">Sauvegarder</button>
+  <button class="btn btn-primary sm:col-span-2">Sauvegarder</button>
 </form>
 {% endblock %}

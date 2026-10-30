@@ -1,59 +1,158 @@
 {% extends "base.html" %}
 {% from "_macros.html" import icon, csrf, page_header with context %}
+{% from "partials/provider_logos.html" import provider_logo %}
+{% set page_title = "Parametres" %}
 {% block content %}
-{{ page_header("Parametres SMTP", "Connectez votre boite mail pour envoyer des emails") }}
+{{ page_header("Parametres", "Connecte ta boite mail pour envoyer tes candidatures et lire les reponses.") }}
 
-<section class="card mt-8 p-6" aria-labelledby="conn-title">
-  <div class="flex flex-wrap items-center justify-between gap-3">
-    <h2 id="conn-title" class="font-display text-base text-white">Connexion actuelle (fichier .env)</h2>
-    {% if settings.smtp_configured %}
-      <span class="badge badge-emerald">Configuree</span>
-    {% else %}
-      <span class="badge badge-rose">Non configuree</span>
-    {% endif %}
+{# --- Etat de la connexion --- #}
+<section class="card mt-8 overflow-hidden" aria-labelledby="conn-title">
+  <div class="flex flex-wrap items-center justify-between gap-4 border-b border-line p-6">
+    <div class="flex items-center gap-4">
+      <span class="flex h-12 w-12 items-center justify-center rounded-2xl {{ 'bg-success/15 text-success' if settings.smtp_configured else 'bg-danger/10 text-danger' }}">
+        {{ icon("check" if settings.smtp_configured else "alert", "h-6 w-6") }}
+      </span>
+      <div>
+        <h2 id="conn-title" class="font-display text-lg font-bold text-fg">
+          {{ "Boite mail connectee" if settings.smtp_configured else "Boite mail non configuree" }}
+        </h2>
+        <p class="text-sm text-muted">{{ settings.smtp_user if settings.smtp_configured else "Suis les etapes ci-dessous, puis relance le site." }}</p>
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <form method="post" action="{{ url_for('settings.test_smtp') }}">{{ csrf() }}
+        <button class="btn btn-primary" {{ 'disabled' if not settings.smtp_configured }}>{{ icon("send", "h-4 w-4") }}Tester l'envoi</button>
+      </form>
+      <form method="post" action="{{ url_for('settings.test_imap') }}">{{ csrf() }}
+        <button class="btn" {{ 'disabled' if not settings.imap_configured }}>{{ icon("inbox", "h-4 w-4") }}Tester la lecture</button>
+      </form>
+    </div>
   </div>
-  <dl class="mt-5 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
-    <div><dt class="text-slate-500">Adresse</dt><dd class="mt-1 text-white">{{ settings.smtp_user or "—" }}</dd></div>
-    <div><dt class="text-slate-500">Serveur d'envoi (SMTP)</dt><dd class="mt-1 text-white">{{ settings.smtp_host }}:{{ settings.smtp_port }}</dd></div>
-    <div><dt class="text-slate-500">Lecture (IMAP)</dt><dd class="mt-1 text-white">{{ settings.imap_host or "—" }}</dd></div>
-    <div><dt class="text-slate-500">Mot de passe</dt><dd class="mt-1 text-white">{{ "•••• (renseigne)" if settings.smtp_password else "manquant" }}</dd></div>
-    <div><dt class="text-slate-500">Pause entre 2 mails</dt><dd class="mt-1 text-white">{{ settings.send_delay_seconds }} s</dd></div>
-    <div><dt class="text-slate-500">Limite / jour</dt><dd class="mt-1 text-white">{{ sent_today }} / {{ settings.daily_send_limit }} envoyes aujourd'hui</dd></div>
-    <div><dt class="text-slate-500">Relancer apres</dt><dd class="mt-1 text-white">{{ settings.followup_delay_days }} jours</dd></div>
-    <div><dt class="text-slate-500">Relances max</dt><dd class="mt-1 text-white">{{ settings.followup_max }}</dd></div>
-  </dl>
-  <div class="mt-6 flex flex-wrap gap-3">
-    <form method="post" action="{{ url_for('settings.test_smtp') }}">{{ csrf() }}<button class="btn btn-gold" {{ 'disabled' if not settings.smtp_configured }}>Tester la connexion (envoi)</button></form>
-    <form method="post" action="{{ url_for('settings.test_imap') }}">{{ csrf() }}<button class="btn" {{ 'disabled' if not settings.imap_configured }}>Tester la lecture (inbox)</button></form>
-  </div>
-  <p class="mt-4 text-xs text-slate-500">Pour modifier ces valeurs : edite le fichier <code>.env</code> a la racine du projet, puis relance <code>python app.py</code>.</p>
-</section>
-
-<section class="mt-6" aria-labelledby="providers-title">
-  <h2 id="providers-title" class="font-display text-base text-white">Fournisseurs</h2>
-  <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-    {% for key, p in presets.items() %}
-    <div class="card p-4"><p class="text-white">{{ p.label }}</p><p class="mt-1 font-mono text-xs text-slate-400">SMTP_HOST={{ p.smtp }}<br>IMAP_HOST={{ p.imap }}</p></div>
-    {% endfor %}
-    <div class="card p-4"><p class="text-white">Autre</p><p class="mt-1 text-xs text-slate-400">Renseigne SMTP_HOST, SMTP_PORT et IMAP_HOST de ton fournisseur.</p></div>
-  </div>
-</section>
-
-<section class="card mt-6 p-6" aria-labelledby="gmail-title">
-  <h2 id="gmail-title" class="font-display text-base text-white">Comment obtenir le mot de passe Gmail</h2>
-  <ol class="mt-4 space-y-2 text-sm text-slate-300">
-    {% for step in [
-      "Va sur myaccount.google.com",
-      "Clique sur Securite",
-      "Active la Verification en 2 etapes (si pas deja fait)",
-      "Retourne dans Securite → Mots de passe des applications",
-      "Selectionne 'Autre (nom personnalise)'",
-      "Nomme-le 'Insider Bot'",
-      "Copie le mot de passe de 16 caracteres genere",
-      "Colle-le dans le fichier .env : SMTP_PASSWORD=xxxx xxxx xxxx xxxx",
+  <dl class="grid gap-px bg-line text-sm sm:grid-cols-2 lg:grid-cols-4">
+    {% for label, value in [
+      ("Serveur d'envoi", settings.smtp_host ~ ":" ~ settings.smtp_port),
+      ("Serveur de lecture", settings.imap_host or "—"),
+      ("Mot de passe", "•••••••• renseigne" if settings.smtp_password else "manquant"),
+      ("Envoyes aujourd'hui", sent_today ~ " / " ~ settings.daily_send_limit),
     ] %}
-    <li class="flex gap-3"><span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gold-500/15 text-xs text-gold-300">{{ loop.index }}</span>{{ step }}</li>
+    <div class="bg-surface px-6 py-4"><dt class="text-xs uppercase tracking-wider text-subtle">{{ label }}</dt><dd class="mt-1 font-medium text-fg">{{ value }}</dd></div>
     {% endfor %}
-  </ol>
+  </dl>
+</section>
+
+{# --- Choix du fournisseur --- #}
+<section class="mt-10" aria-labelledby="providers-title">
+  <h2 id="providers-title" class="font-display text-xl font-bold text-fg">1. Choisis ton fournisseur</h2>
+  <p class="mt-1 text-sm text-muted">Le tutoriel et le fichier de configuration s'adaptent a ton choix.</p>
+  <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4" role="group" aria-label="Fournisseur mail">
+    {% for key, p in presets.items() %}
+    <button type="button" class="provider provider-{{ key }}" data-provider="{{ key }}" aria-pressed="{{ 'true' if key == active_provider else 'false' }}">
+      {{ provider_logo(key, "h-8 w-8 shrink-0") }}
+      <span>{{ "Continuer avec " ~ p.label if key != "other" else "Autre fournisseur" }}<small>{{ p.hint }}</small></span>
+    </button>
+    {% endfor %}
+  </div>
+</section>
+
+{# --- Tutoriels --- #}
+<section class="mt-10 grid gap-6 xl:grid-cols-[1.25fr_1fr]" aria-labelledby="tuto-title">
+  <div class="card p-6 sm:p-8">
+    <h2 id="tuto-title" class="font-display text-xl font-bold text-fg">2. Cree ton mot de passe d'application</h2>
+
+    <div data-provider-panel="gmail" class="mt-5">
+      <div class="flash flash-info">{{ icon("shield", "mt-0.5 h-4 w-4 shrink-0") }}
+        <span>Google n'accepte pas ton mot de passe habituel pour les applis externes : il faut un <strong class="text-fg">mot de passe d'application</strong> de 16 caracteres. Il ne donne acces qu'a tes mails et tu peux le supprimer a tout moment.</span>
+      </div>
+      <ol class="mt-6 space-y-5">
+        {% set gmail_steps = [
+          ("Active la validation en 2 etapes", "Obligatoire pour creer un mot de passe d'application. Ouvre la page, clique sur « Activer » et suis les etapes (code par SMS ou appli Google).", "https://myaccount.google.com/signinoptions/twosv", "Ouvrir la validation en 2 etapes"),
+          ("Ouvre la page « Mots de passe des applications »", "Connecte-toi avec le compte Gmail qui enverra les candidatures.", "https://myaccount.google.com/apppasswords", "Ouvrir les mots de passe d'application"),
+          ("Donne un nom a l'application", "Tape « BOT nassimgnl » puis clique sur « Creer ».", "", ""),
+          ("Copie le code de 16 lettres", "Google affiche un code comme abcd efgh ijkl mnop. Copie-le tout de suite : il ne sera plus affiche ensuite (tu pourras en recreer un).", "", ""),
+          ("Colle-le dans ta configuration", "Copie le bloc « 3. Ta configuration » ci-contre dans le fichier .env (ou dans les secrets Codespaces) et remplace SMTP_PASSWORD par ton code.", "", ""),
+          ("Relance le site puis clique sur « Tester l'envoi »", "Arrete le site (Ctrl + C), relance python app.py et reviens ici : le voyant doit passer au vert.", "", ""),
+        ] %}
+        {% for title, text, url, cta in gmail_steps %}
+        <li class="flex gap-4">
+          <span class="step-num">{{ loop.index }}</span>
+          <div>
+            <p class="font-semibold text-fg">{{ title }}</p>
+            <p class="mt-1 text-sm text-muted">{{ text }}</p>
+            {% if url %}<a href="{{ url }}" target="_blank" rel="noopener" class="link mt-2 inline-flex items-center gap-1.5 text-sm">{{ cta }}{{ icon("external", "h-3.5 w-3.5") }}</a>{% endif %}
+          </div>
+        </li>
+        {% endfor %}
+      </ol>
+      <details class="mt-6 rounded-xl border border-line p-4 text-sm">
+        <summary class="cursor-pointer font-semibold text-fg">« Mots de passe des applications » n'apparait pas ?</summary>
+        <ul class="mt-3 list-disc space-y-1.5 pl-5 text-muted">
+          <li>La validation en 2 etapes n'est pas encore activee : fais l'etape 1 d'abord.</li>
+          <li>Tu utilises un compte d'ecole ou d'entreprise (Google Workspace) : l'administrateur l'a peut-etre bloque. Utilise plutot un Gmail personnel.</li>
+          <li>Ton compte utilise la « Protection avancee » de Google : les mots de passe d'application y sont desactives.</li>
+        </ul>
+      </details>
+      <p class="mt-4 text-xs text-subtle">Bon a savoir : Gmail limite l'envoi a environ 500 mails par jour. Garde une limite raisonnable (100 par defaut) pour ne pas etre classe comme spam.</p>
+    </div>
+
+    <div data-provider-panel="outlook" class="mt-5 hidden">
+      <div class="flash flash-error">{{ icon("alert", "mt-0.5 h-4 w-4 shrink-0") }}
+        <span>Microsoft bloque de plus en plus la connexion par mot de passe pour les applis externes (et la desactive par defaut fin 2026). Sur la plupart des comptes Outlook et des comptes d'ecole, l'envoi sera refuse. <strong>Gmail est recommande.</strong></span>
+      </div>
+      <ol class="mt-6 space-y-4 text-sm">
+        <li class="flex gap-4"><span class="step-num">1</span><p class="text-muted"><span class="font-semibold text-fg">Compte personnel (outlook.com, hotmail.com) :</span> active la verification en deux etapes, puis cree un mot de passe d'application dans <a class="link" target="_blank" rel="noopener" href="https://account.microsoft.com/security">Securite du compte Microsoft</a>.</p></li>
+        <li class="flex gap-4"><span class="step-num">2</span><p class="text-muted"><span class="font-semibold text-fg">Compte d'ecole ou d'entreprise :</span> seul ton service informatique peut autoriser l'envoi SMTP (« SMTP AUTH »).</p></li>
+        <li class="flex gap-4"><span class="step-num">3</span><p class="text-muted">Copie la configuration ci-contre, relance le site et clique sur « Tester l'envoi ». La lecture des reponses (« Verifier inbox ») ne fonctionne pas avec un mot de passe chez Microsoft.</p></li>
+      </ol>
+    </div>
+
+    <div data-provider-panel="yahoo" class="mt-5 hidden">
+      <ol class="space-y-4 text-sm">
+        <li class="flex gap-4"><span class="step-num">1</span><p class="text-muted">Ouvre <a class="link" target="_blank" rel="noopener" href="https://login.yahoo.com/account/security">Securite du compte Yahoo</a>.</p></li>
+        <li class="flex gap-4"><span class="step-num">2</span><p class="text-muted">Clique sur « Generer un mot de passe d'application » et nomme-le « BOT nassimgnl ».</p></li>
+        <li class="flex gap-4"><span class="step-num">3</span><p class="text-muted">Copie le code dans la configuration ci-contre, relance le site et teste l'envoi.</p></li>
+      </ol>
+    </div>
+
+    <div data-provider-panel="other" class="mt-5 hidden">
+      <p class="text-sm text-muted">Cherche « SMTP » et « IMAP » dans l'aide de ton fournisseur : il te faut le serveur d'envoi (SMTP_HOST), son port (587 en general, ou 465), le serveur de lecture (IMAP_HOST) et un mot de passe d'application si ton fournisseur en propose.</p>
+    </div>
+  </div>
+
+  {# --- Configuration a copier --- #}
+  <div class="min-w-0 space-y-6">
+    <div class="card p-6">
+      <div class="flex items-center justify-between gap-3">
+        <h2 class="font-display text-xl font-bold text-fg">3. Ta configuration</h2>
+        <button type="button" class="btn btn-sm" data-copy="#env-snippet">{{ icon("copy", "h-4 w-4") }}<span data-copy-label>Copier</span></button>
+      </div>
+      <p class="mt-1 text-sm text-muted">A coller dans le fichier <span class="kbd">.env</span> a la racine du projet.</p>
+      <pre id="env-snippet" class="mt-4 overflow-x-auto rounded-xl border border-line bg-canvas p-4 font-mono text-[13px] leading-6 text-fg"
+           data-user="{{ settings.smtp_user or 'ton.adresse@gmail.com' }}"
+           data-presets='{{ presets|tojson|forceescape }}'></pre>
+      <p class="mt-3 text-xs text-subtle">Remplace <span class="kbd">SMTP_PASSWORD</span> par ton mot de passe d'application. Le fichier .env n'est jamais envoye sur GitHub.</p>
+    </div>
+
+    <div class="card p-6">
+      <h3 class="font-semibold text-fg">Sur GitHub Codespaces ?</h3>
+      <p class="mt-2 text-sm text-muted">Au lieu du .env, cree des secrets : github.com → Settings → Codespaces → <em>New secret</em> (SMTP_USER, SMTP_PASSWORD, SENDER_NAME, SECRET_KEY), autorise le depot, puis redemarre le codespace.</p>
+      <a href="https://github.com/settings/codespaces" target="_blank" rel="noopener" class="link mt-3 inline-flex items-center gap-1.5 text-sm">Ouvrir les secrets Codespaces{{ icon("external", "h-3.5 w-3.5") }}</a>
+    </div>
+
+    <div class="card p-6">
+      <h3 class="font-semibold text-fg">Rythme d'envoi et relances</h3>
+      <dl class="mt-3 grid grid-cols-2 gap-3 text-sm">
+        {% for label, value in [
+          ("Pause entre 2 mails", settings.send_delay_seconds ~ " s"),
+          ("Limite par jour", settings.daily_send_limit ~ " mails"),
+          ("Relancer apres", settings.followup_delay_days ~ " jours"),
+          ("Relances max", settings.followup_max),
+        ] %}
+        <div class="rounded-xl bg-raised px-3 py-2.5"><dt class="text-xs text-subtle">{{ label }}</dt><dd class="font-semibold text-fg">{{ value }}</dd></div>
+        {% endfor %}
+      </dl>
+      <p class="mt-3 text-xs text-subtle">Modifiables dans le .env : SEND_DELAY_SECONDS, DAILY_SEND_LIMIT, FOLLOWUP_DELAY_DAYS, FOLLOWUP_MAX.</p>
+    </div>
+  </div>
 </section>
 {% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='settings.js') }}"></script>{% endblock %}

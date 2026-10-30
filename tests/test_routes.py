@@ -2,7 +2,7 @@ import io
 
 import pytest
 
-from insider.repos import contacts as contacts_repo
+from botnassimgnl.repos import contacts as contacts_repo
 
 PAGES = ["/", "/contacts/", "/contacts/?tab=institution", "/contacts/?tab=poste", "/contacts/?tab=ajouter",
          "/suivi/", "/compose/", "/relances/", "/pipeline/", "/analytics/", "/formats/", "/profil/", "/parametres/"]

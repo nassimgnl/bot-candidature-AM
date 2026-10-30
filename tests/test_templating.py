@@ -1,6 +1,6 @@
 from datetime import date
 
-from insider.templating import build_context, render
+from botnassimgnl.templating import build_context, render
 
 CONTACT = {"civilite": "Madame", "prenom": "Marie", "nom": "Martin", "poste": "VP Sales", "institution": "BNP Paribas"}
 PROFILE = {"prenom": "Nassim", "nom": "G", "ecole": "KEDGE", "poste_actuel": "Etudiant"}

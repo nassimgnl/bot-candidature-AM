@@ -1,8 +1,8 @@
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 
-from insider.db import get_db
-from insider.email_format import EmailFormatError, build_email
-from insider.repos.institutions import (InstitutionError, create_institution, delete_institution,
+from botnassimgnl.db import get_db
+from botnassimgnl.email_format import EmailFormatError, build_email
+from botnassimgnl.repos.institutions import (InstitutionError, create_institution, delete_institution,
                                         list_institutions, update_institution)
 
 bp = Blueprint("formats", __name__, url_prefix="/formats")

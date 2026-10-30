@@ -5,12 +5,28 @@ from dataclasses import dataclass
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+DATABASE_FILENAME = "bot.db"
+# Nom de la base dans la premiere version du projet : renommee automatiquement au lancement.
+LEGACY_DATABASE_FILENAME = "insider.db"
+# Valeurs d'exemple de .env.example : tant qu'elles sont la, la boite mail n'est pas consideree comme configuree.
+PLACEHOLDER_VALUES = frozenset({"ton.adresse@gmail.com", "xxxx xxxx xxxx xxxx"})
 
 SMTP_PRESETS = {
-    "gmail": {"label": "Gmail", "smtp": "smtp.gmail.com", "imap": "imap.gmail.com"},
-    "outlook": {"label": "Outlook / Hotmail", "smtp": "smtp.office365.com", "imap": "outlook.office365.com"},
-    "yahoo": {"label": "Yahoo", "smtp": "smtp.mail.yahoo.com", "imap": "imap.mail.yahoo.com"},
+    "gmail": {"label": "Gmail", "hint": "Recommande", "smtp": "smtp.gmail.com", "port": 587,
+              "imap": "imap.gmail.com", "app_password_url": "https://myaccount.google.com/apppasswords"},
+    "outlook": {"label": "Outlook", "hint": "Hotmail, Live, Microsoft 365", "smtp": "smtp.office365.com", "port": 587,
+                "imap": "outlook.office365.com", "app_password_url": "https://account.microsoft.com/security"},
+    "yahoo": {"label": "Yahoo", "hint": "Yahoo Mail, AOL", "smtp": "smtp.mail.yahoo.com", "port": 465,
+              "imap": "imap.mail.yahoo.com", "app_password_url": "https://login.yahoo.com/account/security"},
+    "other": {"label": "Autre", "hint": "Serveur personnalise", "smtp": "", "port": 587, "imap": "",
+              "app_password_url": ""},
 }
+
+
+def detect_provider(smtp_host: str) -> str:
+    """Fournisseur correspondant au serveur SMTP configure (sinon "other")."""
+    host = (smtp_host or "").lower()
+    return next((key for key, preset in SMTP_PRESETS.items() if preset["smtp"] and preset["smtp"] == host), "other")
 
 
 def _int(name: str, default: int) -> int:
@@ -40,15 +56,19 @@ class Settings:
 
     @property
     def smtp_configured(self) -> bool:
-        return bool(self.smtp_host and self.smtp_user and self.smtp_password)
+        return bool(self.smtp_host and self.smtp_user and self.smtp_password) and not self.uses_placeholders
+
+    @property
+    def uses_placeholders(self) -> bool:
+        return self.smtp_user in PLACEHOLDER_VALUES or self.smtp_password in PLACEHOLDER_VALUES
 
     @property
     def imap_configured(self) -> bool:
-        return bool(self.imap_host and self.smtp_user and self.smtp_password)
+        return bool(self.imap_host and self.smtp_user and self.smtp_password) and not self.uses_placeholders
 
     @property
     def database_path(self) -> Path:
-        return self.data_dir / "insider.db"
+        return self.data_dir / DATABASE_FILENAME
 
     @property
     def uploads_dir(self) -> Path:

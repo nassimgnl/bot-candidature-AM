@@ -1,11 +1,13 @@
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 
-from insider.campaigns import due_followups, expire_followups
-from insider.db import get_db
-from insider.inbox import InboxError, check_inbox
-from insider.repos.contacts import list_contacts
-from insider.routes.helpers import app_settings
-from insider.stats import overview
+from botnassimgnl.campaigns import due_followups, expire_followups
+from botnassimgnl.db import get_db
+from botnassimgnl.inbox import InboxError, check_inbox
+from botnassimgnl.repos.contacts import list_contacts
+from botnassimgnl.repos.emails import sent_today
+from botnassimgnl.repos.profile import get_profile
+from botnassimgnl.routes.helpers import app_settings
+from botnassimgnl.stats import overview
 
 bp = Blueprint("dashboard", __name__)
 
@@ -21,6 +23,8 @@ def index():
         stats=overview(conn),
         recent=list_contacts(conn, limit=RECENT_CONTACTS),
         followups_due=len(due_followups(conn, app_settings())),
+        profile=get_profile(conn),
+        sent_today=sent_today(conn),
     )
 
 

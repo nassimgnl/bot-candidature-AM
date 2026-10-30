@@ -5,13 +5,13 @@ from datetime import timedelta
 
 import pytest
 
-from insider import sender
-from insider.campaigns import utc_now
-from insider.inbox import InboxReport
-from insider.mailer import MailerError
-from insider.repos import contacts as contacts_repo
-from insider.repos.emails import record_email
-from insider.repos.templates import list_templates
+from botnassimgnl import sender
+from botnassimgnl.campaigns import utc_now
+from botnassimgnl.inbox import InboxReport
+from botnassimgnl.mailer import MailerError
+from botnassimgnl.repos import contacts as contacts_repo
+from botnassimgnl.repos.emails import record_email
+from botnassimgnl.repos.templates import list_templates
 
 
 @pytest.fixture
@@ -23,8 +23,8 @@ def captured_jobs(monkeypatch):
         jobs.append({"items": items, "sender": sender_name})
         return sender.SendJob(id="fake", total=len(items), status="done")
 
-    monkeypatch.setattr("insider.routes.compose.start_job", fake_start_job)
-    monkeypatch.setattr("insider.routes.relances.start_job", fake_start_job)
+    monkeypatch.setattr("botnassimgnl.routes.compose.start_job", fake_start_job)
+    monkeypatch.setattr("botnassimgnl.routes.relances.start_job", fake_start_job)
     return jobs
 
 
@@ -52,7 +52,7 @@ def test_compose_send_requires_subject_and_recipients(client, csrf, conn, captur
 
 
 def test_compose_send_refuses_without_smtp(unconfigured_settings, captured_jobs):
-    from insider import create_app
+    from botnassimgnl import create_app
 
     app = create_app(unconfigured_settings)
     client = app.test_client()
@@ -62,7 +62,7 @@ def test_compose_send_refuses_without_smtp(unconfigured_settings, captured_jobs)
 
 def test_compose_test_email_goes_to_own_address(client, csrf, conn, monkeypatch):
     sent = []
-    monkeypatch.setattr("insider.routes.compose.send_email", lambda s, email, name: sent.append(email) or "<id>")
+    monkeypatch.setattr("botnassimgnl.routes.compose.send_email", lambda s, email, name: sent.append(email) or "<id>")
     client.post("/compose/test", data={"csrf_token": csrf, "subject": "Hello {Prenom}", "body": "b"})
     assert sent[0].to == "moi@test.local"
     assert sent[0].subject == "[TEST] Hello Jean"
@@ -72,7 +72,7 @@ def test_compose_test_email_reports_smtp_error(client, csrf, monkeypatch):
     def boom(*_):
         raise MailerError("refuse")
 
-    monkeypatch.setattr("insider.routes.compose.send_email", boom)
+    monkeypatch.setattr("botnassimgnl.routes.compose.send_email", boom)
     response = client.post("/compose/test", data={"csrf_token": csrf, "subject": "s", "body": "b"},
                            follow_redirects=True)
     assert "Mail test non envoye".encode() in response.data
@@ -118,8 +118,8 @@ def test_relances_send_ignores_contacts_not_due(client, csrf, conn, captured_job
 
 
 def test_settings_smtp_and_imap_tests(client, csrf, monkeypatch):
-    monkeypatch.setattr("insider.routes.settings.test_connection", lambda _s: None)
-    monkeypatch.setattr("insider.routes.settings.check_inbox", lambda _c, _s: InboxReport(3, 0, 0))
+    monkeypatch.setattr("botnassimgnl.routes.settings.test_connection", lambda _s: None)
+    monkeypatch.setattr("botnassimgnl.routes.settings.check_inbox", lambda _c, _s: InboxReport(3, 0, 0))
     assert "Connexion SMTP OK".encode() in client.post("/parametres/test-smtp", data={"csrf_token": csrf},
                                                       follow_redirects=True).data
     assert "3 message(s)".encode() in client.post("/parametres/test-imap", data={"csrf_token": csrf},
@@ -127,12 +127,12 @@ def test_settings_smtp_and_imap_tests(client, csrf, monkeypatch):
 
 
 def test_dashboard_inbox_check_reports_errors(client, csrf, monkeypatch):
-    from insider.inbox import InboxError
+    from botnassimgnl.inbox import InboxError
 
     def boom(*_):
         raise InboxError("IMAP en panne")
 
-    monkeypatch.setattr("insider.routes.dashboard.check_inbox", boom)
+    monkeypatch.setattr("botnassimgnl.routes.dashboard.check_inbox", boom)
     response = client.post("/inbox/check", data={"csrf_token": csrf}, follow_redirects=True)
     assert "IMAP en panne".encode() in response.data
 

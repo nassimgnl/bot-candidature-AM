@@ -29,6 +29,34 @@ document.querySelectorAll("[data-select-all]").forEach((master) => {
   refresh();
 });
 
+// Bascule mode clair / mode sombre (memorise dans le navigateur).
+function syncThemeLabels() {
+  const dark = document.documentElement.dataset.theme === "dark";
+  document.querySelectorAll("[data-theme-label]").forEach((el) => { el.textContent = dark ? "Mode clair" : "Mode sombre"; });
+}
+document.querySelectorAll("[data-theme-toggle]").forEach((btn) => btn.addEventListener("click", () => {
+  const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = next;
+  try { localStorage.setItem("theme", next); } catch (e) { /* navigation privee : theme non memorise */ }
+  syncThemeLabels();
+}));
+syncThemeLabels();
+
+// Fermeture des messages.
+document.querySelectorAll("[data-dismiss]").forEach((btn) => btn.addEventListener("click", () => btn.closest(".flash").remove()));
+
+// Copier dans le presse-papiers : data-copy="#id-de-l-element".
+document.querySelectorAll("[data-copy]").forEach((btn) => btn.addEventListener("click", async () => {
+  const source = document.querySelector(btn.dataset.copy);
+  const label = btn.querySelector("[data-copy-label]");
+  try {
+    await navigator.clipboard.writeText(source.innerText.trim());
+    if (label) { label.textContent = "Copie !"; setTimeout(() => { label.textContent = "Copier"; }, 1600); }
+  } catch (e) {
+    window.alert("Copie impossible : selectionne le texte et fais Cmd+C.");
+  }
+}));
+
 // Confirmation avant une action destructive : data-confirm="message".
 document.addEventListener("submit", (event) => {
   const submitter = event.submitter;

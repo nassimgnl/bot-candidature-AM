@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "_macros.html" import page_header with context %}
+{% set page_title = "Pipeline" %}
 {% block content %}
 {{ page_header("Pipeline", "Suivez chaque contact de A a Z — glissez une carte pour changer son statut") }}
 
@@ -8,17 +9,17 @@
   <section class="kanban-col card flex w-64 shrink-0 flex-col p-3" data-status="{{ key }}" aria-label="{{ STATUSES[key].label }}">
     <header class="flex items-center justify-between px-2 py-1">
       <span class="badge badge-{{ STATUSES[key].color }}">{{ STATUSES[key].label }}</span>
-      <span class="text-sm text-slate-400" data-count>{{ cards|length }}</span>
+      <span class="text-sm text-muted" data-count>{{ cards|length }}</span>
     </header>
     <div class="mt-2 flex min-h-[6rem] flex-1 flex-col gap-2" data-dropzone>
       {% for c in cards %}
-      <article class="cursor-grab rounded-2xl border border-white/5 bg-ink-700/80 p-3 active:cursor-grabbing" draggable="true" data-id="{{ c.id }}">
-        <a href="{{ url_for('contacts.detail', contact_id=c.id) }}" class="text-sm font-medium text-white hover:text-gold-400">{{ c.prenom }} {{ c.nom }}</a>
-        <p class="mt-1 truncate text-xs text-slate-400">{{ c.poste or "—" }}</p>
-        <p class="truncate text-xs text-slate-500">{{ c.institution or "—" }}</p>
+      <article class="cursor-grab rounded-2xl border border-line bg-raised p-3 active:cursor-grabbing" draggable="true" data-id="{{ c.id }}">
+        <a href="{{ url_for('contacts.detail', contact_id=c.id) }}" class="text-sm font-medium text-fg hover:text-brand-text">{{ c.prenom }} {{ c.nom }}</a>
+        <p class="mt-1 truncate text-xs text-muted">{{ c.poste or "—" }}</p>
+        <p class="truncate text-xs text-subtle">{{ c.institution or "—" }}</p>
       </article>
       {% else %}
-      <p class="py-6 text-center text-sm text-slate-600" data-empty>Vide</p>
+      <p class="py-6 text-center text-sm text-subtle" data-empty>Vide</p>
       {% endfor %}
     </div>
   </section>

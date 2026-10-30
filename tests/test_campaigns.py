@@ -1,12 +1,12 @@
 from dataclasses import replace
 from datetime import datetime, timedelta
 
-from insider.campaigns import due_followups, expire_followups, prepare_followups, prepare_initial, utc_now
-from insider.mailer import MailerError
-from insider.repos import contacts as contacts_repo
-from insider.repos.emails import record_email
-from insider.repos.profile import update_profile
-from insider.sender import SendJob, run_job
+from botnassimgnl.campaigns import due_followups, expire_followups, prepare_followups, prepare_initial, utc_now
+from botnassimgnl.mailer import MailerError
+from botnassimgnl.repos import contacts as contacts_repo
+from botnassimgnl.repos.emails import record_email
+from botnassimgnl.repos.profile import update_profile
+from botnassimgnl.sender import SendJob, run_job
 
 STAMP = "%Y-%m-%d %H:%M:%S"
 

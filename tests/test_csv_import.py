@@ -3,7 +3,7 @@ import io
 import pytest
 from openpyxl import Workbook
 
-from insider.csv_import import MAX_FILE_BYTES, ImportFileError, parse_contacts_file
+from botnassimgnl.csv_import import MAX_FILE_BYTES, ImportFileError, parse_contacts_file
 
 
 def test_parses_comma_separated_utf8_with_bom():

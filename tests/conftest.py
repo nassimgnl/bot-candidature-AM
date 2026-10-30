@@ -3,9 +3,9 @@ from dataclasses import replace
 
 import pytest
 
-from insider import create_app
-from insider.config import Settings
-from insider.db import connect
+from botnassimgnl import create_app
+from botnassimgnl.config import Settings
+from botnassimgnl.db import connect
 
 
 @pytest.fixture

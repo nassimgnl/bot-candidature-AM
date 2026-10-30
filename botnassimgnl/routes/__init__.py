@@ -5,7 +5,7 @@ from werkzeug.exceptions import RequestEntityTooLarge
 
 
 def register_blueprints(app: Flask) -> None:
-    from insider.routes import (analytics, compose, contacts, dashboard, formats, pipeline,
+    from botnassimgnl.routes import (analytics, compose, contacts, dashboard, formats, pipeline,
                                 profile, relances, settings, suivi)
 
     for module in (dashboard, contacts, suivi, compose, relances, pipeline, analytics,

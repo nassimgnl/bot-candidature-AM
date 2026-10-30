@@ -8,9 +8,9 @@ from datetime import datetime
 from email.parser import BytesHeaderParser
 from email.utils import parseaddr
 
-from insider import statuses
-from insider.config import Settings
-from insider.repos.emails import earliest_sent_date, message_ids_by_contact
+from botnassimgnl import statuses
+from botnassimgnl.config import Settings
+from botnassimgnl.repos.emails import earliest_sent_date, message_ids_by_contact
 
 IMAP_TIMEOUT_SECONDS = 30
 MAX_MESSAGES_SCANNED = 500

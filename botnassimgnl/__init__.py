@@ -1,22 +1,38 @@
-"""Bot de candidatures — application Flask."""
+"""BOT nassimgnl — bot de candidatures (application Flask)."""
 
 import logging
 import secrets
 
 from flask import Flask, abort, request, session
 
-from insider import statuses
-from insider.config import Settings, load_settings
-from insider.db import close_db, connect, init_schema
-from insider.seed import seed_if_empty
+from botnassimgnl import statuses
+from botnassimgnl.config import LEGACY_DATABASE_FILENAME, Settings, load_settings
+from botnassimgnl.db import close_db, connect, init_schema
+from botnassimgnl.seed import seed_if_empty
 
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 CSRF_SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
+SQLITE_SIDECAR_SUFFIXES = ("", "-wal", "-shm")
+
+logger = logging.getLogger(__name__)
+
+
+def _migrate_legacy_database(settings: Settings) -> None:
+    """Reprend les contacts d'une installation precedente (ancien nom de fichier)."""
+    legacy = settings.data_dir / LEGACY_DATABASE_FILENAME
+    if settings.database_path.exists() or not legacy.exists():
+        return
+    for suffix in SQLITE_SIDECAR_SUFFIXES:
+        source = legacy.with_name(legacy.name + suffix)
+        if source.exists():
+            source.rename(settings.database_path.with_name(settings.database_path.name + suffix))
+    logger.info("Base de donnees reprise depuis %s", legacy.name)
 
 
 def _init_storage(settings: Settings) -> None:
     settings.data_dir.mkdir(parents=True, exist_ok=True)
     settings.uploads_dir.mkdir(parents=True, exist_ok=True)
+    _migrate_legacy_database(settings)
     conn = connect(settings.database_path)
     try:
         init_schema(conn)
@@ -53,10 +69,14 @@ def create_app(settings: Settings | None = None) -> Flask:
 
     @app.context_processor
     def inject_globals() -> dict:
-        return {"csrf_token": _csrf_token, "STATUSES": statuses.STATUSES,
-                "settings": app_settings, "status_label": statuses.label}
+        from botnassimgnl.campaigns import due_followups
+        from botnassimgnl.db import get_db
 
-    from insider.routes import register_blueprints
+        return {"csrf_token": _csrf_token, "STATUSES": statuses.STATUSES,
+                "settings": app_settings, "status_label": statuses.label,
+                "nav_followups": len(due_followups(get_db(), app_settings))}
+
+    from botnassimgnl.routes import register_blueprints
 
     register_blueprints(app)
     return app

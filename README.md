@@ -1,6 +1,6 @@
-# Bot de candidatures (INSIDER)
+# BOT nassimgnl — bot de candidatures
 
-Site local pour envoyer des candidatures spontanées en masse aux banques : on importe un fichier CSV de contacts, le site devine l'email pro de chaque personne grâce au **format mail de sa banque**, remplit automatiquement un modèle de mail, l'envoie depuis ta boîte Gmail avec ton CV, puis gère les **relances** et le suivi des réponses.
+Site local (mode clair / sombre) pour envoyer des candidatures spontanées en masse aux banques : on importe un fichier CSV de contacts, le site devine l'email pro de chaque personne grâce au **format mail de sa banque**, remplit automatiquement un modèle de mail, l'envoie depuis ta boîte Gmail avec ton CV, puis gère les **relances** et le suivi des réponses.
 
 ## Installation (une seule fois)
 
@@ -55,7 +55,7 @@ Ouvre **http://localhost:5000** dans ton navigateur. Le site n'est accessible qu
 | `FOLLOWUP_MAX` | Nombre de relances max (0 à 3) | `3` |
 | `SECRET_KEY` | Chaîne aléatoire | `python -c "import secrets; print(secrets.token_hex(32))"` |
 
-**Mot de passe d'application Gmail** : myaccount.google.com → Sécurité → active la validation en 2 étapes → *Mots de passe des applications* → crée-en un nommé « Insider Bot » → copie les 16 caractères dans `SMTP_PASSWORD`.
+**Mot de passe d'application Gmail** : myaccount.google.com → Sécurité → active la validation en 2 étapes → *Mots de passe des applications* → crée-en un nommé « BOT nassimgnl » → copie les 16 caractères dans `SMTP_PASSWORD`.
 
 ⚠️ Le fichier `.env` contient ton mot de passe : il est exclu de Git (`.gitignore`) et ne doit jamais être publié.
 
@@ -81,7 +81,7 @@ python -m pytest
 
 ```
 app.py                 point d'entrée
-insider/               code Python (Flask)
+botnassimgnl/          code Python (Flask)
   email_format.py      génération des emails à partir des formats
   csv_import.py        lecture CSV / Excel
   templating.py        variables des modèles

@@ -2,7 +2,7 @@
 
 from flask import current_app, request
 
-from insider.config import Settings
+from botnassimgnl.config import Settings
 
 
 def app_settings() -> Settings:

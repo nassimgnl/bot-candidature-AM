@@ -6,11 +6,11 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Callable
 
-from insider.campaigns import PreparedEmail
-from insider.config import Settings
-from insider.db import connect
-from insider.mailer import MailerError, OutgoingEmail, send_email
-from insider.repos.emails import record_email, sent_today
+from botnassimgnl.campaigns import PreparedEmail
+from botnassimgnl.config import Settings
+from botnassimgnl.db import connect
+from botnassimgnl.mailer import MailerError, OutgoingEmail, send_email
+from botnassimgnl.repos.emails import record_email, sent_today
 
 logger = logging.getLogger(__name__)
 

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, status_badge, csrf, page_header with context %}
+{% block content %}
+{{ page_header("Suivi des candidatures", contacts|length ~ " contact" ~ ("s" if contacts|length > 1 else "")) }}
+
+<nav class="tabs mt-8" aria-label="Filtrer par statut">
+  <a href="{{ url_for('suivi.index') }}" class="tab {{ 'tab-active' if not status }}">Tous</a>
+  {% for key, s in STATUSES.items() %}
+    <a href="{{ url_for('suivi.index', status=key) }}" class="tab {{ 'tab-active' if status == key }}">{{ s.label }}</a>
+  {% endfor %}
+</nav>
+
+{% if contacts %}
+<form method="post" action="{{ url_for('contacts.bulk') }}" class="card mt-6 overflow-x-auto">
+  {{ csrf() }}
+  <table class="table w-full">
+    <thead><tr><th>Contact</th><th>Institution</th><th>Statut</th><th>Dernier envoi</th><th>Relances</th><th>Changer</th></tr></thead>
+    <tbody>
+      {% for c in contacts %}
+      <tr>
+        <td><a class="text-white hover:text-gold-400" href="{{ url_for('contacts.detail', contact_id=c.id) }}">{{ c.prenom }} {{ c.nom }}</a><div class="text-xs text-slate-500">{{ c.poste }}</div></td>
+        <td class="text-slate-300">{{ c.institution or "—" }}</td>
+        <td>{{ status_badge(c.status) }}</td>
+        <td class="text-slate-400">{{ c.last_sent_at[:10] if c.last_sent_at else "—" }}</td>
+        <td class="text-slate-400">{{ c.followups_sent }}</td>
+        <td>
+          <select class="select w-auto py-1.5 text-sm" aria-label="Statut de {{ c.prenom }} {{ c.nom }}"
+                  onchange="this.form.ids.value='{{ c.id }}'; this.form.action_field.value='status:'+this.value; this.form.requestSubmit()">
+            {% for key, s in STATUSES.items() %}<option value="{{ key }}" {{ 'selected' if c.status == key }}>{{ s.label }}</option>{% endfor %}
+          </select>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <input type="hidden" name="ids">
+  <input type="hidden" name="action" id="action_field">
+</form>
+{% else %}
+<div class="card mt-6 py-16 text-center">
+  <p class="text-white">Aucun contact pour l'instant</p>
+  <p class="mt-2 text-sm text-slate-400">Va dans <a class="text-gold-400 hover:underline" href="{{ url_for('contacts.index', tab='ajouter') }}">Contacts</a> pour en ajouter (manuellement ou via CSV).</p>
+</div>
+{% endif %}
+{% endblock %}

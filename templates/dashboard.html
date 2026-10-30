@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, status_badge, csrf, page_header with context %}
+{% block content %}
+<div class="flex flex-wrap items-start justify-between gap-4">
+  {{ page_header("Dashboard", "Vue d'ensemble de vos campagnes") }}
+  <div class="flex gap-3">
+    <a href="{{ url_for('contacts.index', tab='ajouter') }}" class="btn">{{ icon("plus", "h-4 w-4") }}Contact</a>
+    <a href="{{ url_for('compose.index') }}" class="btn btn-gold">{{ icon("send", "h-4 w-4") }}Composer</a>
+  </div>
+</div>
+
+<section class="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Chiffres cles">
+  {% set cards = [
+    ("users", stats.contacts, "Contacts", stats.contacts_today ~ " aujourd'hui"),
+    ("mail", stats.emails_sent, "Emails envoyes", ""),
+    ("inbox", stats.replies, "Reponses", ""),
+    ("chart", stats.reply_rate ~ "%", "Taux de reponse", ""),
+  ] %}
+  {% for ic, value, label, hint in cards %}
+  <div class="card p-6">
+    <div class="flex items-center justify-between text-slate-500">{{ icon(ic) }}<span class="text-xs">{{ hint }}</span></div>
+    <p class="mt-6 font-display text-4xl font-medium text-white">{{ value }}</p>
+    <p class="mt-1 text-sm text-slate-400">{{ label }}</p>
+  </div>
+  {% endfor %}
+</section>
+
+{% if followups_due %}
+<a href="{{ url_for('relances.index') }}" class="card mt-6 flex items-center justify-between gap-4 border-violet-400/20 p-5 hover:bg-white/[.03]">
+  <span class="flex items-center gap-3 text-violet-200">{{ icon("repeat") }}<strong>{{ followups_due }}</strong> contact(s) a relancer (sans reponse depuis {{ settings.followup_delay_days }} jours)</span>
+  <span class="text-sm text-slate-400">Voir les relances →</span>
+</a>
+{% endif %}
+
+<section class="card mt-6 p-6">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h2 class="font-display text-lg text-white">Contacts recents</h2>
+    <form method="post" action="{{ url_for('dashboard.inbox_check') }}">
+      {{ csrf() }}
+      <button class="btn">{{ icon("inbox", "h-4 w-4") }}Verifier inbox</button>
+    </form>
+  </div>
+  {% if recent %}
+  <div class="mt-4 overflow-x-auto">
+    <table class="table w-full">
+      <thead><tr><th>Nom</th><th>Institution</th><th>Poste</th><th>Statut</th></tr></thead>
+      <tbody>
+        {% for c in recent %}
+        <tr>
+          <td><a class="text-white hover:text-gold-400" href="{{ url_for('contacts.detail', contact_id=c.id) }}">{{ c.prenom }} {{ c.nom }}</a></td>
+          <td class="text-slate-300">{{ c.institution or "—" }}</td>
+          <td class="text-slate-400">{{ c.poste or "—" }}</td>
+          <td>{{ status_badge(c.status) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="py-12 text-center">
+    <p class="text-slate-400">Aucun contact. Commencez par en ajouter un.</p>
+    <a href="{{ url_for('contacts.index', tab='ajouter') }}" class="btn btn-gold mt-4">{{ icon("plus", "h-4 w-4") }}Ajouter un contact</a>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

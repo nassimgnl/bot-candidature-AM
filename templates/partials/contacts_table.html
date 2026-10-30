@@ -1,0 +1,59 @@
+{% from "_macros.html" import icon, status_badge, csrf with context %}
+<form method="get" class="mt-6 flex flex-wrap gap-3">
+  <input type="hidden" name="tab" value="tous">
+  <label class="relative min-w-[16rem] flex-1">
+    <span class="sr-only">Rechercher</span>
+    <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">{{ icon("search", "h-4 w-4") }}</span>
+    <input class="input pl-10" name="search" value="{{ filters.search }}" placeholder="Rechercher...">
+  </label>
+  <select class="select w-auto" name="institution" onchange="this.form.submit()" aria-label="Institution">
+    <option value="">Toutes institutions</option>
+    {% for i in institutions %}<option {{ 'selected' if filters.institution == i }}>{{ i }}</option>{% endfor %}
+  </select>
+  <select class="select w-auto" name="poste" onchange="this.form.submit()" aria-label="Poste">
+    <option value="">Tous postes</option>
+    {% for p in postes %}<option {{ 'selected' if filters.poste == p }}>{{ p }}</option>{% endfor %}
+  </select>
+  <select class="select w-auto" name="status" onchange="this.form.submit()" aria-label="Statut">
+    <option value="">Tous statuts</option>
+    {% for key, s in STATUSES.items() %}<option value="{{ key }}" {{ 'selected' if filters.status == key }}>{{ s.label }}</option>{% endfor %}
+  </select>
+</form>
+
+<form method="post" action="{{ url_for('contacts.bulk') }}" class="mt-4">
+  {{ csrf() }}
+  <div class="mb-3 flex flex-wrap items-center gap-2 text-sm">
+    <span class="text-slate-400"><span data-select-count="ids">0</span> selectionne(s)</span>
+    <button name="action" value="compose" class="btn py-1.5">{{ icon("send", "h-4 w-4") }}Composer</button>
+    <select name="action" class="select w-auto py-1.5" onchange="if (this.value) this.form.requestSubmit()" aria-label="Changer le statut">
+      <option value="">Changer le statut...</option>
+      {% for key, s in STATUSES.items() %}<option value="status:{{ key }}">{{ s.label }}</option>{% endfor %}
+    </select>
+    <button name="action" value="delete" class="btn btn-danger py-1.5" data-confirm="Supprimer les contacts selectionnes ?">{{ icon("trash", "h-4 w-4") }}Supprimer</button>
+  </div>
+  <div class="card overflow-x-auto">
+    <table class="table w-full">
+      <thead>
+        <tr>
+          <th class="w-10"><input type="checkbox" data-select-all="ids" aria-label="Tout selectionner"></th>
+          <th>Nom</th><th>Institution</th><th>Poste</th><th>Email</th><th>Statut</th><th>Emails</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in contacts %}
+        <tr>
+          <td><input type="checkbox" name="ids" value="{{ c.id }}" aria-label="Selectionner {{ c.prenom }} {{ c.nom }}"></td>
+          <td><a class="text-white hover:text-gold-400" href="{{ url_for('contacts.detail', contact_id=c.id) }}">{{ "Mme" if c.civilite == "Madame" else "M." }} {{ c.prenom }} {{ c.nom }}</a></td>
+          <td class="text-slate-300">{{ c.institution or "—" }}</td>
+          <td class="text-slate-400">{{ c.poste or "—" }}</td>
+          <td class="text-slate-400">{{ c.email or "— pas d'email" }}</td>
+          <td>{{ status_badge(c.status) }}</td>
+          <td class="text-slate-400">{{ c.email_count }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="py-12 text-center text-slate-500">Aucun contact</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</form>

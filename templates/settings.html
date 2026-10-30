@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, csrf, page_header with context %}
+{% block content %}
+{{ page_header("Parametres SMTP", "Connectez votre boite mail pour envoyer des emails") }}
+
+<section class="card mt-8 p-6" aria-labelledby="conn-title">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h2 id="conn-title" class="font-display text-base text-white">Connexion actuelle (fichier .env)</h2>
+    {% if settings.smtp_configured %}
+      <span class="badge badge-emerald">Configuree</span>
+    {% else %}
+      <span class="badge badge-rose">Non configuree</span>
+    {% endif %}
+  </div>
+  <dl class="mt-5 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+    <div><dt class="text-slate-500">Adresse</dt><dd class="mt-1 text-white">{{ settings.smtp_user or "—" }}</dd></div>
+    <div><dt class="text-slate-500">Serveur d'envoi (SMTP)</dt><dd class="mt-1 text-white">{{ settings.smtp_host }}:{{ settings.smtp_port }}</dd></div>
+    <div><dt class="text-slate-500">Lecture (IMAP)</dt><dd class="mt-1 text-white">{{ settings.imap_host or "—" }}</dd></div>
+    <div><dt class="text-slate-500">Mot de passe</dt><dd class="mt-1 text-white">{{ "•••• (renseigne)" if settings.smtp_password else "manquant" }}</dd></div>
+    <div><dt class="text-slate-500">Pause entre 2 mails</dt><dd class="mt-1 text-white">{{ settings.send_delay_seconds }} s</dd></div>
+    <div><dt class="text-slate-500">Limite / jour</dt><dd class="mt-1 text-white">{{ sent_today }} / {{ settings.daily_send_limit }} envoyes aujourd'hui</dd></div>
+    <div><dt class="text-slate-500">Relancer apres</dt><dd class="mt-1 text-white">{{ settings.followup_delay_days }} jours</dd></div>
+    <div><dt class="text-slate-500">Relances max</dt><dd class="mt-1 text-white">{{ settings.followup_max }}</dd></div>
+  </dl>
+  <div class="mt-6 flex flex-wrap gap-3">
+    <form method="post" action="{{ url_for('settings.test_smtp') }}">{{ csrf() }}<button class="btn btn-gold" {{ 'disabled' if not settings.smtp_configured }}>Tester la connexion (envoi)</button></form>
+    <form method="post" action="{{ url_for('settings.test_imap') }}">{{ csrf() }}<button class="btn" {{ 'disabled' if not settings.imap_configured }}>Tester la lecture (inbox)</button></form>
+  </div>
+  <p class="mt-4 text-xs text-slate-500">Pour modifier ces valeurs : edite le fichier <code>.env</code> a la racine du projet, puis relance <code>python app.py</code>.</p>
+</section>
+
+<section class="mt-6" aria-labelledby="providers-title">
+  <h2 id="providers-title" class="font-display text-base text-white">Fournisseurs</h2>
+  <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    {% for key, p in presets.items() %}
+    <div class="card p-4"><p class="text-white">{{ p.label }}</p><p class="mt-1 font-mono text-xs text-slate-400">SMTP_HOST={{ p.smtp }}<br>IMAP_HOST={{ p.imap }}</p></div>
+    {% endfor %}
+    <div class="card p-4"><p class="text-white">Autre</p><p class="mt-1 text-xs text-slate-400">Renseigne SMTP_HOST, SMTP_PORT et IMAP_HOST de ton fournisseur.</p></div>
+  </div>
+</section>
+
+<section class="card mt-6 p-6" aria-labelledby="gmail-title">
+  <h2 id="gmail-title" class="font-display text-base text-white">Comment obtenir le mot de passe Gmail</h2>
+  <ol class="mt-4 space-y-2 text-sm text-slate-300">
+    {% for step in [
+      "Va sur myaccount.google.com",
+      "Clique sur Securite",
+      "Active la Verification en 2 etapes (si pas deja fait)",
+      "Retourne dans Securite → Mots de passe des applications",
+      "Selectionne 'Autre (nom personnalise)'",
+      "Nomme-le 'Insider Bot'",
+      "Copie le mot de passe de 16 caracteres genere",
+      "Colle-le dans le fichier .env : SMTP_PASSWORD=xxxx xxxx xxxx xxxx",
+    ] %}
+    <li class="flex gap-3"><span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gold-500/15 text-xs text-gold-300">{{ loop.index }}</span>{{ step }}</li>
+    {% endfor %}
+  </ol>
+</section>
+{% endblock %}

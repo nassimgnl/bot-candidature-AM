@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% from "_macros.html" import page_header with context %}
+{% block content %}
+{{ page_header("Pipeline", "Suivez chaque contact de A a Z — glissez une carte pour changer son statut") }}
+
+<div class="mt-8 flex gap-4 overflow-x-auto pb-4">
+  {% for key, cards in columns.items() %}
+  <section class="kanban-col card flex w-64 shrink-0 flex-col p-3" data-status="{{ key }}" aria-label="{{ STATUSES[key].label }}">
+    <header class="flex items-center justify-between px-2 py-1">
+      <span class="badge badge-{{ STATUSES[key].color }}">{{ STATUSES[key].label }}</span>
+      <span class="text-sm text-slate-400" data-count>{{ cards|length }}</span>
+    </header>
+    <div class="mt-2 flex min-h-[6rem] flex-1 flex-col gap-2" data-dropzone>
+      {% for c in cards %}
+      <article class="cursor-grab rounded-2xl border border-white/5 bg-ink-700/80 p-3 active:cursor-grabbing" draggable="true" data-id="{{ c.id }}">
+        <a href="{{ url_for('contacts.detail', contact_id=c.id) }}" class="text-sm font-medium text-white hover:text-gold-400">{{ c.prenom }} {{ c.nom }}</a>
+        <p class="mt-1 truncate text-xs text-slate-400">{{ c.poste or "—" }}</p>
+        <p class="truncate text-xs text-slate-500">{{ c.institution or "—" }}</p>
+      </article>
+      {% else %}
+      <p class="py-6 text-center text-sm text-slate-600" data-empty>Vide</p>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(() => {
+  let dragged = null;
+  document.querySelectorAll("[draggable]").forEach((card) => {
+    card.addEventListener("dragstart", () => { dragged = card; card.classList.add("opacity-50"); });
+    card.addEventListener("dragend", () => card.classList.remove("opacity-50"));
+  });
+  const refreshCounts = () => document.querySelectorAll(".kanban-col").forEach((col) => {
+    const n = col.querySelectorAll("[draggable]").length;
+    col.querySelector("[data-count]").textContent = n;
+    const empty = col.querySelector("[data-empty]");
+    if (empty) empty.classList.toggle("hidden", n > 0);
+  });
+  document.querySelectorAll(".kanban-col").forEach((col) => {
+    col.addEventListener("dragover", (e) => { e.preventDefault(); col.classList.add("drag-over"); });
+    col.addEventListener("dragleave", () => col.classList.remove("drag-over"));
+    col.addEventListener("drop", async (e) => {
+      e.preventDefault();
+      col.classList.remove("drag-over");
+      if (!dragged) return;
+      const origin = dragged.parentElement;
+      col.querySelector("[data-dropzone]").prepend(dragged);
+      refreshCounts();
+      try {
+        await postJSON("{{ url_for('pipeline.move') }}", { id: dragged.dataset.id, status: col.dataset.status });
+      } catch (err) {
+        origin.prepend(dragged);
+        refreshCounts();
+        alert(`Statut non modifie : ${err.message}`);
+      }
+    });
+  });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% from "_macros.html" import page_header with context %}
+{% block content %}
+{{ page_header("Analytics", "Performance de vos campagnes") }}
+
+<section class="card mt-8 p-6" aria-labelledby="funnel-title">
+  <h2 id="funnel-title" class="font-display text-lg text-white">Funnel de conversion</h2>
+  {% set top = funnel[0][1] or 1 %}
+  <div class="mt-6 space-y-3">
+    {% for label, value in funnel %}
+    <div class="grid grid-cols-[7rem_1fr_4rem] items-center gap-4">
+      <span class="text-sm text-slate-400">{{ label }}</span>
+      <div class="h-9 overflow-hidden rounded-xl bg-white/[.04]">
+        <div class="h-full rounded-xl bg-gradient-to-r from-gold-600 to-gold-400" style="width: {{ (100 * value / top) | round(1) if value else 0 }}%"></div>
+      </div>
+      <span class="text-right font-display text-white">{{ value }}</span>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="card mt-6 p-6" aria-labelledby="sends-title">
+  <div class="flex items-baseline justify-between">
+    <h2 id="sends-title" class="font-display text-lg text-white">Envois (30 derniers jours)</h2>
+    <span class="text-sm text-slate-400">max {{ max_day }} / jour</span>
+  </div>
+  <div class="mt-6 flex h-48 items-end gap-1" role="img" aria-label="Nombre d'emails envoyes par jour">
+    {% for d in days %}
+    <div class="group relative flex h-full flex-1 items-end" title="{{ d.day }} : {{ d.n }}">
+      <div class="w-full rounded-t-md {{ 'bg-gold-400' if d.n else 'bg-white/[.06]' }}" style="height: {{ (100 * d.n / max_day) if max_day and d.n else 2 }}%"></div>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="mt-2 flex justify-between text-xs text-slate-500"><span>{{ days[0].day }}</span><span>{{ days[-1].day }}</span></div>
+</section>
+
+<section class="card mt-6 p-6" aria-labelledby="status-title">
+  <h2 id="status-title" class="font-display text-lg text-white">Repartition par statut</h2>
+  <div class="mt-5 flex flex-wrap gap-3">
+    {% for key, s in STATUSES.items() %}
+      <span class="badge badge-{{ s.color }} px-3 py-1 text-sm">{{ s.label }} · {{ by_status.get(key, 0) }}</span>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

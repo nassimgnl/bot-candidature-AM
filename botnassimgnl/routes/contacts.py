@@ -115,7 +115,8 @@ def update(contact_id: int):
 @bp.post("/bulk")
 def bulk():
     ids = form_ids()
-    action = request.form.get("action", "")
+    # Le menu « Changer le statut » partage le nom "action" : on garde la premiere valeur non vide.
+    action = next((value for value in request.form.getlist("action") if value), "")
     if not ids:
         flash("Aucun contact selectionne.", "error")
     elif action == "delete":

@@ -65,6 +65,19 @@ def test_bulk_delete(client, csrf, conn):
     assert contacts_repo.list_contacts(conn) == []
 
 
+def test_bulk_delete_from_browser_form_removes_contact_everywhere(client, csrf, conn):
+    # Le navigateur envoie aussi le menu « Changer le statut » (vide) avant le bouton clique.
+    kept = contacts_repo.create_contact(conn, {"prenom": "Garde", "nom": "N", "status": "envoye"})
+    ids = [contacts_repo.create_contact(conn, {"prenom": f"P{i}", "nom": "N", "status": "envoye"}) for i in range(2)]
+    conn.execute("INSERT INTO emails (contact_id, kind, subject, body) VALUES (?, 'initial', 's', 'b')", (ids[0],))
+    conn.commit()
+    client.post("/contacts/bulk", data={"csrf_token": csrf, "ids": [str(i) for i in ids], "action": ["", "delete"]})
+    assert [c["id"] for c in contacts_repo.list_contacts(conn)] == [kept]
+    assert conn.execute("SELECT COUNT(*) FROM emails").fetchone()[0] == 0
+    for page in ("/pipeline/", "/suivi/", "/contacts/"):
+        assert b"P0" not in client.get(page).data
+
+
 def test_profile_save(client, csrf, conn):
     client.post("/profil/", data={"csrf_token": csrf, "prenom": "Nassim", "nom": "G", "ecole": "KEDGE",
                                   "poste_actuel": "M1"})
